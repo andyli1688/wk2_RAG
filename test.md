@@ -1,2 +1,0 @@
-# wk2_RAG
-WK2 RAG
