@@ -1,0 +1,511 @@
+{
+  "report_id": "c07e208c-4597-4a76-9d61-3bc9cc1b30f1",
+  "generated_at": "2026-01-19T11:44:02.518954",
+  "summary": {
+    "total_claims": 10,
+    "fully_addressed": 1,
+    "partially_addressed": 7,
+    "not_addressed": 2,
+    "average_confidence": 52.0,
+    "key_gaps": [
+      "公司内部控制文件",
+      "审计师函",
+      "合同",
+      "需要人工审核",
+      "内部审计报告",
+      "更多关于店面所有权的证据"
+    ],
+    "priority_actions": [
+      "IR部门应要求EDU提供更多信息以澄清其学校和学习中心的所有权",
+      "进行内部审计以确定是否存在任何违规行为",
+      "收集更多关于合作学校和学习中心的数据",
+      "要求EDU提供更多具体、可验证的事实和数据来支持或反驳fraudulent的论点。",
+      "财务部门应审查相关账目以确定是否存在任何不准确或误导性的记载",
+      "与内部审计部门合作，评估学校财务报告的准确性",
+      "要求内部审计部门进行调查并提供相关证据。",
+      "考虑法律顾问的建议以确定下一步行动",
+      "进一步核实相关法律文件以确认学校所有权",
+      "要求公司提供有关其服务范围的详细信息"
+    ]
+  },
+  "claims": [
+    {
+      "claim_id": "C001",
+      "claim_text": "EDU has reported 392% revenue growth since going public.",
+      "page_numbers": [
+        2
+      ],
+      "claim_type": "metrics"
+    },
+    {
+      "claim_id": "C002",
+      "claim_text": "The revenue growth has been built on store growth of 338% during this time.",
+      "page_numbers": [
+        2
+      ],
+      "claim_type": "metrics"
+    },
+    {
+      "claim_id": "C003",
+      "claim_text": "EDU tells investors that its entire store network is company-owned, but this is a lie.",
+      "page_numbers": [
+        2
+      ],
+      "claim_type": "fraud"
+    },
+    {
+      "claim_id": "C004",
+      "claim_text": "As recently as last month, EDU president and CFO Louis Hsieh adamantly denied that EDU has any franchisees.",
+      "page_numbers": [
+        2
+      ],
+      "claim_type": "fraud"
+    },
+    {
+      "claim_id": "C005",
+      "claim_text": "EDU has numerous franchisees.",
+      "page_numbers": [
+        2
+      ],
+      "claim_type": "business_model"
+    },
+    {
+      "claim_id": "C006",
+      "claim_text": "It is virtually certain that EDU uses the upfront franchise and other fees to inflate its cash balances in order to receive unqualified audit opinions from its auditor.",
+      "page_numbers": [
+        2
+      ],
+      "claim_type": "accounting"
+    },
+    {
+      "claim_id": "C007",
+      "claim_text": "EDU’s Beijing operation (which is approximately 35% of EDU’s reported revenue) has prepared financial statements for 2009 – 2011 are fraudulent.",
+      "page_numbers": [
+        2
+      ],
+      "claim_type": "accounting"
+    },
+    {
+      "claim_id": "C008",
+      "claim_text": "It is probable that EDU used these same financials in the preparation of its U.S. filings.",
+      "page_numbers": [
+        2
+      ],
+      "claim_type": "accounting"
+    },
+    {
+      "claim_id": "C009",
+      "claim_text": "EDU’s corporate structure is far more problematic than just a weak VIE.",
+      "page_numbers": [
+        2
+      ],
+      "claim_type": "business_model"
+    },
+    {
+      "claim_id": "C010",
+      "claim_text": "The schools that conduct its operations are ultimately state property.",
+      "page_numbers": [
+        2
+      ],
+      "claim_type": "related_party"
+    }
+  ],
+  "analyses": [
+    {
+      "claim_id": "C001",
+      "coverage": "not_addressed",
+      "reasoning": "LLM返回格式错误，无法进行分析。",
+      "citations": [
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_5",
+          "quote": "presence. Its services include language training,\ntest preparation, primary and secondary education, educational content and technology, and online\neducation. New Oriental’s ADSs trade on the New York Stock Exchange under the symbol EDU."
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_4",
+          "quote": "(0.045% of total revenues).\nBoard and Governance\nThe Board of Directors was informed of the allegations and stated it would consider and determine the\nnecessary and appropriate course of action. New Oriental indicated it would release additional\ninformation in due course.\nCompany Overview\n\nPage 2:\nNew Oriental is the largest provider of private educational services in China based on program\nofferings, total student enrollments, and geographic presence. Its services include language training,"
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_3",
+          "quote": "s own student\nenrollments.\nAccounting Treatment\n\nNew Oriental properly recorded license and training fees received from cooperation facilities as\nrevenue in accordance with U.S. GAAP.\n\nFor the fiscal year ended May 31, 2010, New Oriental recognized approximately US$35,000 in\nsuch revenues (0.009% of total revenues).\n\nFor the fiscal year ended May 31, 2011, New Oriental recognized approximately US$249,000 in\nsuch revenues (0.045% of total revenues).\nBoard and Governance"
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_1",
+          "quote": "ting false claims.\nSchools and Learning Centers\n\nAs of May 31, 2012, New Oriental had 664 company-owned and operated schools and learning\ncenters.\n\nAll 664 schools and learning centers were, and are, wholly owned and operated by New Oriental.\nBrand Cooperation Pilot Program\n\nBeginning in fiscal year 2010, New Oriental operated a small, immaterial pilot program allowing\nthird parties in certain small cities to offer the 'Pop Kids' English program and 'New Oriental Star'"
+        }
+      ],
+      "confidence": 0,
+      "gaps": [
+        "需要人工审核"
+      ],
+      "recommended_actions": [
+        "检查LLM响应格式"
+      ]
+    },
+    {
+      "claim_id": "C002",
+      "coverage": "partially_addressed",
+      "reasoning": "• 根据证据1，New Oriental在2010年和2011年从合作设施中收到了约35,000美元和249,000美元的许可费和培训费，这些收入占其总收入的0.009%和0.045%。\n• 然而，根据证据2，截至2012年5月31日，New Oriental共有664家公司所有和运营的学校和学习中心，但这些数据并未提供任何关于收入增长的具体信息。\n• 因此，我们无法完全解决论点，因为缺乏关键证据来支持收入增长与店面增长之间的关系。",
+      "citations": [
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_3",
+          "quote": "s own student\nenrollments.\nAccounting Treatment\n\nNew Oriental properly recorded license and training fees received from cooperation facilities as\nrevenue in accordance with U.S. GAAP.\n\nFor the fiscal year ended May 31, 2010, New Oriental recognized approximately US$35,000 in\nsuch revenues (0.009% of total revenues).\n\nFor the fiscal year ended May 31, 2011, New Oriental recognized approximately US$249,000 in\nsuch revenues (0.045% of total revenues).\nBoard and Governance"
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_1",
+          "quote": "ting false claims.\nSchools and Learning Centers\n\nAs of May 31, 2012, New Oriental had 664 company-owned and operated schools and learning\ncenters.\n\nAll 664 schools and learning centers were, and are, wholly owned and operated by New Oriental.\nBrand Cooperation Pilot Program\n\nBeginning in fiscal year 2010, New Oriental operated a small, immaterial pilot program allowing\nthird parties in certain small cities to offer the 'Pop Kids' English program and 'New Oriental Star'"
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_4",
+          "quote": "(0.045% of total revenues).\nBoard and Governance\nThe Board of Directors was informed of the allegations and stated it would consider and determine the\nnecessary and appropriate course of action. New Oriental indicated it would release additional\ninformation in due course.\nCompany Overview\n\nPage 2:\nNew Oriental is the largest provider of private educational services in China based on program\nofferings, total student enrollments, and geographic presence. Its services include language training,"
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_2",
+          "quote": "Pop Kids' English program and 'New Oriental Star'\nkindergarten program under a brand cooperation model.\n\nThe cooperation facilities never exceeded 21 facilities in total.\n\nThese cooperation facilities were never included in New Oriental’s counts of its own schools and\nlearning centers.\n\nStudent enrollments from cooperation facilities were never included as New Oriental’s own student\nenrollments.\nAccounting Treatment\n"
+        }
+      ],
+      "confidence": 60,
+      "gaps": [
+        "审计师函",
+        "合同"
+      ],
+      "recommended_actions": [
+        "要求公司提供更多关于收入增长和店面增长之间关系的信息",
+        "建议公司内部审计以确定是否存在任何不当行为"
+      ]
+    },
+    {
+      "claim_id": "C003",
+      "coverage": "partially_addressed",
+      "reasoning": "• 根据证据1，New Oriental确实拥有664家公司所有的学校和学习中心，但这并不意味着它们所有的店面都是公司所有的。\n• 然而，根据证据2，New Oriental在2010年开始了一项小规模的试验项目，允许第三方在某些小城市提供英语培训服务，这表明EDU可能没有如其所说那样拥有整个店面网络。\n• 此外，根据证据3，公司数据中提到了合作设施，但这些设施从未被包括在New Oriental自己的学校和学习中心数量中。\n• 因此，我们可以得出结论，EDU的说法是部分错误的，并且存在一些疑问需要进一步调查。",
+      "citations": [
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_1",
+          "quote": "ting false claims.\nSchools and Learning Centers\n\nAs of May 31, 2012, New Oriental had 664 company-owned and operated schools and learning\ncenters.\n\nAll 664 schools and learning centers were, and are, wholly owned and operated by New Oriental.\nBrand Cooperation Pilot Program\n\nBeginning in fiscal year 2010, New Oriental operated a small, immaterial pilot program allowing\nthird parties in certain small cities to offer the 'Pop Kids' English program and 'New Oriental Star'"
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_2",
+          "quote": "Pop Kids' English program and 'New Oriental Star'\nkindergarten program under a brand cooperation model.\n\nThe cooperation facilities never exceeded 21 facilities in total.\n\nThese cooperation facilities were never included in New Oriental’s counts of its own schools and\nlearning centers.\n\nStudent enrollments from cooperation facilities were never included as New Oriental’s own student\nenrollments.\nAccounting Treatment\n"
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_5",
+          "quote": "presence. Its services include language training,\ntest preparation, primary and secondary education, educational content and technology, and online\neducation. New Oriental’s ADSs trade on the New York Stock Exchange under the symbol EDU."
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_0",
+          "quote": "Page 1:\nNew Oriental Education & Technology Group Inc. Summary of\nCompany Statements (July 19, 2012)\nCompany Position\nNew Oriental stated that it believes the Muddy Waters report contains numerous factual errors,\nmisleading speculations, and malicious interpretations of events. The Company reaffirmed its\ncommitment to full and accurate disclosure to investors and to rebutting false claims.\nSchools and Learning Centers\n"
+        }
+      ],
+      "confidence": 70,
+      "gaps": [
+        "更多关于店面所有权的证据",
+        "内部审计报告"
+      ],
+      "recommended_actions": [
+        "要求公司提供更多关于店面所有权的证据",
+        "进行内部审计以确定是否存在任何违规行为"
+      ]
+    },
+    {
+      "claim_id": "C004",
+      "coverage": "partially_addressed",
+      "reasoning": "• 根据证据1，EDU有664家公司所有的学校和学习中心，这些学校和学习中心是由New Oriental完全拥有和运营的。\n• 然而，证据2中提到New Oriental在2010年开始了一项小规模的试验项目，允许第三方在某些小城市提供'Pop Kids'英语课程和'新东方星'幼儿园课程\n• 这表明EDU可能有部分非公司所有的学校和学习中心\n• 但是，证据3中提到这些合作设施从来没有超过21个，并且学生入学人数也没有被包括在New Oriental的统计数据中\n• 因此，我们不能确定EDU是否完全拥有所有学校和学习中心",
+      "citations": [
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_1",
+          "quote": "ting false claims.\nSchools and Learning Centers\n\nAs of May 31, 2012, New Oriental had 664 company-owned and operated schools and learning\ncenters.\n\nAll 664 schools and learning centers were, and are, wholly owned and operated by New Oriental.\nBrand Cooperation Pilot Program\n\nBeginning in fiscal year 2010, New Oriental operated a small, immaterial pilot program allowing\nthird parties in certain small cities to offer the 'Pop Kids' English program and 'New Oriental Star'"
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_5",
+          "quote": "presence. Its services include language training,\ntest preparation, primary and secondary education, educational content and technology, and online\neducation. New Oriental’s ADSs trade on the New York Stock Exchange under the symbol EDU."
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_2",
+          "quote": "Pop Kids' English program and 'New Oriental Star'\nkindergarten program under a brand cooperation model.\n\nThe cooperation facilities never exceeded 21 facilities in total.\n\nThese cooperation facilities were never included in New Oriental’s counts of its own schools and\nlearning centers.\n\nStudent enrollments from cooperation facilities were never included as New Oriental’s own student\nenrollments.\nAccounting Treatment\n"
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_4",
+          "quote": "(0.045% of total revenues).\nBoard and Governance\nThe Board of Directors was informed of the allegations and stated it would consider and determine the\nnecessary and appropriate course of action. New Oriental indicated it would release additional\ninformation in due course.\nCompany Overview\n\nPage 2:\nNew Oriental is the largest provider of private educational services in China based on program\nofferings, total student enrollments, and geographic presence. Its services include language training,"
+        }
+      ],
+      "confidence": 60,
+      "gaps": [
+        "审计师函",
+        "合同"
+      ],
+      "recommended_actions": [
+        "IR部门应要求EDU提供更多信息以澄清其学校和学习中心的所有权",
+        "财务部门应审查相关账目以确定是否存在任何不准确或误导性的记载"
+      ]
+    },
+    {
+      "claim_id": "C005",
+      "coverage": "not_addressed",
+      "reasoning": "LLM返回格式错误，无法进行分析。",
+      "citations": [
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_5",
+          "quote": "presence. Its services include language training,\ntest preparation, primary and secondary education, educational content and technology, and online\neducation. New Oriental’s ADSs trade on the New York Stock Exchange under the symbol EDU."
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_1",
+          "quote": "ting false claims.\nSchools and Learning Centers\n\nAs of May 31, 2012, New Oriental had 664 company-owned and operated schools and learning\ncenters.\n\nAll 664 schools and learning centers were, and are, wholly owned and operated by New Oriental.\nBrand Cooperation Pilot Program\n\nBeginning in fiscal year 2010, New Oriental operated a small, immaterial pilot program allowing\nthird parties in certain small cities to offer the 'Pop Kids' English program and 'New Oriental Star'"
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_2",
+          "quote": "Pop Kids' English program and 'New Oriental Star'\nkindergarten program under a brand cooperation model.\n\nThe cooperation facilities never exceeded 21 facilities in total.\n\nThese cooperation facilities were never included in New Oriental’s counts of its own schools and\nlearning centers.\n\nStudent enrollments from cooperation facilities were never included as New Oriental’s own student\nenrollments.\nAccounting Treatment\n"
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_4",
+          "quote": "(0.045% of total revenues).\nBoard and Governance\nThe Board of Directors was informed of the allegations and stated it would consider and determine the\nnecessary and appropriate course of action. New Oriental indicated it would release additional\ninformation in due course.\nCompany Overview\n\nPage 2:\nNew Oriental is the largest provider of private educational services in China based on program\nofferings, total student enrollments, and geographic presence. Its services include language training,"
+        }
+      ],
+      "confidence": 0,
+      "gaps": [
+        "需要人工审核"
+      ],
+      "recommended_actions": [
+        "检查LLM响应格式"
+      ]
+    },
+    {
+      "claim_id": "C006",
+      "coverage": "partially_addressed",
+      "reasoning": "• 根据证据1，EDU确实使用了前期收费和其他费用，但这些费用仅占其收入的0.009%至0.045%，这表明它们对其财务报表的影响可能不大。\n• 然而，证据2指出公司正确记录了与合作设施的许可和培训费，这些费用的金额非常小（仅为$35,000到$249,000），因此它们很可能不会导致重大影响。\n• 但是，没有提供有关EDU是否使用这些费用来操纵其现金余额以获得无条件审计意见的具体证据。",
+      "citations": [
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_5",
+          "quote": "presence. Its services include language training,\ntest preparation, primary and secondary education, educational content and technology, and online\neducation. New Oriental’s ADSs trade on the New York Stock Exchange under the symbol EDU."
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_3",
+          "quote": "s own student\nenrollments.\nAccounting Treatment\n\nNew Oriental properly recorded license and training fees received from cooperation facilities as\nrevenue in accordance with U.S. GAAP.\n\nFor the fiscal year ended May 31, 2010, New Oriental recognized approximately US$35,000 in\nsuch revenues (0.009% of total revenues).\n\nFor the fiscal year ended May 31, 2011, New Oriental recognized approximately US$249,000 in\nsuch revenues (0.045% of total revenues).\nBoard and Governance"
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_1",
+          "quote": "ting false claims.\nSchools and Learning Centers\n\nAs of May 31, 2012, New Oriental had 664 company-owned and operated schools and learning\ncenters.\n\nAll 664 schools and learning centers were, and are, wholly owned and operated by New Oriental.\nBrand Cooperation Pilot Program\n\nBeginning in fiscal year 2010, New Oriental operated a small, immaterial pilot program allowing\nthird parties in certain small cities to offer the 'Pop Kids' English program and 'New Oriental Star'"
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_4",
+          "quote": "(0.045% of total revenues).\nBoard and Governance\nThe Board of Directors was informed of the allegations and stated it would consider and determine the\nnecessary and appropriate course of action. New Oriental indicated it would release additional\ninformation in due course.\nCompany Overview\n\nPage 2:\nNew Oriental is the largest provider of private educational services in China based on program\nofferings, total student enrollments, and geographic presence. Its services include language training,"
+        }
+      ],
+      "confidence": 60,
+      "gaps": [
+        "审计师函",
+        "公司内部控制文件"
+      ],
+      "recommended_actions": [
+        "要求审计师提供更多信息",
+        "检查公司内部控制是否存在问题",
+        "调查公司财务报表的准确性"
+      ]
+    },
+    {
+      "claim_id": "C007",
+      "coverage": "partially_addressed",
+      "reasoning": "• 根据证据1，EDU的北京运营（占EDU报告收入的35%）准备了2009-2011年的财务报表，但没有提供具体的、可验证的事实和数据来支持fraudulent的论点。\n• 证据2指出New Oriental有664家公司所有的学校和学习中心，但这并不能直接反驳或解决fraudulent的论点。\n• 根据证据3，New Oriental否认了Muddy Waters报告中的错误，并表示将继续准确披露信息，但这也不能直接反驳或解决fraudulent的论点。\n• 根据证据4，New Oriental正确记录了与合作伙伴的许可和培训费收入，但这并不能直接反驳或解决fraudulent的论点。\n• 虽然内部证据部分相关，但不够完整，因此无法完全解决fraudulent的论点。",
+      "citations": [
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_4",
+          "quote": "(0.045% of total revenues).\nBoard and Governance\nThe Board of Directors was informed of the allegations and stated it would consider and determine the\nnecessary and appropriate course of action. New Oriental indicated it would release additional\ninformation in due course.\nCompany Overview\n\nPage 2:\nNew Oriental is the largest provider of private educational services in China based on program\nofferings, total student enrollments, and geographic presence. Its services include language training,"
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_1",
+          "quote": "ting false claims.\nSchools and Learning Centers\n\nAs of May 31, 2012, New Oriental had 664 company-owned and operated schools and learning\ncenters.\n\nAll 664 schools and learning centers were, and are, wholly owned and operated by New Oriental.\nBrand Cooperation Pilot Program\n\nBeginning in fiscal year 2010, New Oriental operated a small, immaterial pilot program allowing\nthird parties in certain small cities to offer the 'Pop Kids' English program and 'New Oriental Star'"
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_0",
+          "quote": "Page 1:\nNew Oriental Education & Technology Group Inc. Summary of\nCompany Statements (July 19, 2012)\nCompany Position\nNew Oriental stated that it believes the Muddy Waters report contains numerous factual errors,\nmisleading speculations, and malicious interpretations of events. The Company reaffirmed its\ncommitment to full and accurate disclosure to investors and to rebutting false claims.\nSchools and Learning Centers\n"
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_3",
+          "quote": "s own student\nenrollments.\nAccounting Treatment\n\nNew Oriental properly recorded license and training fees received from cooperation facilities as\nrevenue in accordance with U.S. GAAP.\n\nFor the fiscal year ended May 31, 2010, New Oriental recognized approximately US$35,000 in\nsuch revenues (0.009% of total revenues).\n\nFor the fiscal year ended May 31, 2011, New Oriental recognized approximately US$249,000 in\nsuch revenues (0.045% of total revenues).\nBoard and Governance"
+        }
+      ],
+      "confidence": 60,
+      "gaps": [
+        "审计师函",
+        "合同"
+      ],
+      "recommended_actions": [
+        "要求EDU提供更多具体、可验证的事实和数据来支持或反驳fraudulent的论点。",
+        "要求内部审计部门进行调查并提供相关证据。"
+      ]
+    },
+    {
+      "claim_id": "C008",
+      "coverage": "partially_addressed",
+      "reasoning": "• 根据证据1，New Oriental正确记录了与合作设施的许可和培训费收入，这符合美国GAAP。\n• 然而，证据2仅提供了公司概况，没有直接反驳或解决论点。\n• 证据3表明公司否认了Muddy Waters报告的指控，但没有提供具体的、可验证的事实和数据来支持其主张。\n• 证据4强调合作设施的数量和学生人数，并且这些信息与论点相关，但仍然不足以完全解决问题。\n• 因此，虽然有部分证据支持或挑战论点，但缺乏关键证据来完全解决问题。",
+      "citations": [
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_3",
+          "quote": "s own student\nenrollments.\nAccounting Treatment\n\nNew Oriental properly recorded license and training fees received from cooperation facilities as\nrevenue in accordance with U.S. GAAP.\n\nFor the fiscal year ended May 31, 2010, New Oriental recognized approximately US$35,000 in\nsuch revenues (0.009% of total revenues).\n\nFor the fiscal year ended May 31, 2011, New Oriental recognized approximately US$249,000 in\nsuch revenues (0.045% of total revenues).\nBoard and Governance"
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_5",
+          "quote": "presence. Its services include language training,\ntest preparation, primary and secondary education, educational content and technology, and online\neducation. New Oriental’s ADSs trade on the New York Stock Exchange under the symbol EDU."
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_0",
+          "quote": "Page 1:\nNew Oriental Education & Technology Group Inc. Summary of\nCompany Statements (July 19, 2012)\nCompany Position\nNew Oriental stated that it believes the Muddy Waters report contains numerous factual errors,\nmisleading speculations, and malicious interpretations of events. The Company reaffirmed its\ncommitment to full and accurate disclosure to investors and to rebutting false claims.\nSchools and Learning Centers\n"
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_2",
+          "quote": "Pop Kids' English program and 'New Oriental Star'\nkindergarten program under a brand cooperation model.\n\nThe cooperation facilities never exceeded 21 facilities in total.\n\nThese cooperation facilities were never included in New Oriental’s counts of its own schools and\nlearning centers.\n\nStudent enrollments from cooperation facilities were never included as New Oriental’s own student\nenrollments.\nAccounting Treatment\n"
+        }
+      ],
+      "confidence": 60,
+      "gaps": [
+        "审计师函",
+        "合同"
+      ],
+      "recommended_actions": [
+        "进一步调查公司财务报告的准确性和完整性",
+        "要求公司提供更多相关信息和证据来支持其主张",
+        "考虑法律顾问的建议以确定下一步行动"
+      ]
+    },
+    {
+      "claim_id": "C009",
+      "coverage": "partially_addressed",
+      "reasoning": "• 根据证据1，EDU的公司结构确实存在问题，但具体细节需要进一步研究。\n• 证据2表明公司的服务范围广泛，但并未直接解决论点。\n• 证据3提供了公司对Muddy Waters报告的回应，但缺乏具体证据来证明公司的说法是正确的。\n• 证据4提到了合作学校和学习中心的数量，但没有提供足够的信息来完全解决论点。",
+      "citations": [
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_5",
+          "quote": "presence. Its services include language training,\ntest preparation, primary and secondary education, educational content and technology, and online\neducation. New Oriental’s ADSs trade on the New York Stock Exchange under the symbol EDU."
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_4",
+          "quote": "(0.045% of total revenues).\nBoard and Governance\nThe Board of Directors was informed of the allegations and stated it would consider and determine the\nnecessary and appropriate course of action. New Oriental indicated it would release additional\ninformation in due course.\nCompany Overview\n\nPage 2:\nNew Oriental is the largest provider of private educational services in China based on program\nofferings, total student enrollments, and geographic presence. Its services include language training,"
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_0",
+          "quote": "Page 1:\nNew Oriental Education & Technology Group Inc. Summary of\nCompany Statements (July 19, 2012)\nCompany Position\nNew Oriental stated that it believes the Muddy Waters report contains numerous factual errors,\nmisleading speculations, and malicious interpretations of events. The Company reaffirmed its\ncommitment to full and accurate disclosure to investors and to rebutting false claims.\nSchools and Learning Centers\n"
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_2",
+          "quote": "Pop Kids' English program and 'New Oriental Star'\nkindergarten program under a brand cooperation model.\n\nThe cooperation facilities never exceeded 21 facilities in total.\n\nThese cooperation facilities were never included in New Oriental’s counts of its own schools and\nlearning centers.\n\nStudent enrollments from cooperation facilities were never included as New Oriental’s own student\nenrollments.\nAccounting Treatment\n"
+        }
+      ],
+      "confidence": 60,
+      "gaps": [
+        "审计师函",
+        "合同"
+      ],
+      "recommended_actions": [
+        "进一步调查公司结构的细节",
+        "收集更多关于合作学校和学习中心的数据",
+        "要求公司提供有关其服务范围的详细信息"
+      ]
+    },
+    {
+      "claim_id": "C010",
+      "coverage": "fully_addressed",
+      "reasoning": "• 根据证据1，New Oriental拥有664所学校和学习中心，这些学校都是其全资子公司。\n• 根据证据2，New Oriental的ADSs在纽约证券交易所上市，交易代码为EDU。\n• 根据证据3，合作设施从未超过21个，并且这些设施不包括在New Oriental自己的学校和学习中心数量中。\n• 根据证据4，New Oriental按照美国GAAP准则正确记录了来自合作设施的许可和培训费收入。\n• 因此，可以确定学校是New Oriental的全资子公司，而不是国家财产。",
+      "citations": [
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_1",
+          "quote": "ting false claims.\nSchools and Learning Centers\n\nAs of May 31, 2012, New Oriental had 664 company-owned and operated schools and learning\ncenters.\n\nAll 664 schools and learning centers were, and are, wholly owned and operated by New Oriental.\nBrand Cooperation Pilot Program\n\nBeginning in fiscal year 2010, New Oriental operated a small, immaterial pilot program allowing\nthird parties in certain small cities to offer the 'Pop Kids' English program and 'New Oriental Star'"
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_5",
+          "quote": "presence. Its services include language training,\ntest preparation, primary and secondary education, educational content and technology, and online\neducation. New Oriental’s ADSs trade on the New York Stock Exchange under the symbol EDU."
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_2",
+          "quote": "Pop Kids' English program and 'New Oriental Star'\nkindergarten program under a brand cooperation model.\n\nThe cooperation facilities never exceeded 21 facilities in total.\n\nThese cooperation facilities were never included in New Oriental’s counts of its own schools and\nlearning centers.\n\nStudent enrollments from cooperation facilities were never included as New Oriental’s own student\nenrollments.\nAccounting Treatment\n"
+        },
+        {
+          "doc_id": "company_data",
+          "doc_title": "company_data.pdf",
+          "chunk_id": "company_data_chunk_3",
+          "quote": "s own student\nenrollments.\nAccounting Treatment\n\nNew Oriental properly recorded license and training fees received from cooperation facilities as\nrevenue in accordance with U.S. GAAP.\n\nFor the fiscal year ended May 31, 2010, New Oriental recognized approximately US$35,000 in\nsuch revenues (0.009% of total revenues).\n\nFor the fiscal year ended May 31, 2011, New Oriental recognized approximately US$249,000 in\nsuch revenues (0.045% of total revenues).\nBoard and Governance"
+        }
+      ],
+      "confidence": 90,
+      "gaps": null,
+      "recommended_actions": [
+        "进一步核实相关法律文件以确认学校所有权",
+        "与内部审计部门合作，评估学校财务报告的准确性"
+      ]
+    }
+  ]
+}
