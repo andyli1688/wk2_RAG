@@ -9,7 +9,6 @@ from typing import Optional
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-import asyncio
 
 from app.config import REPORTS_DIR, CHROMA_DIR
 from app.models import (
@@ -29,15 +28,20 @@ logger = logging.getLogger(__name__)
 
 # Create FastAPI app
 app = FastAPI(
-    title="Short Report Rebuttal Assistant",
+    title="Short Report Rebuttal Assistant API",
     description="API for analyzing short reports and generating rebuttal analysis",
     version="1.0.0"
 )
 
-# CORS middleware
+# CORS middleware - allow frontend origin
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:5173",  # Vite default port
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -51,9 +55,9 @@ async def root():
         "message": "Short Report Rebuttal Assistant API",
         "version": "1.0.0",
         "endpoints": {
-            "upload": "/upload_report",
-            "analyze": "/analyze",
-            "download": "/download_report/{report_id}"
+            "upload": "/api/upload_report",
+            "analyze": "/api/analyze",
+            "download": "/api/download_report/{report_id}"
         }
     }
 
@@ -61,7 +65,6 @@ async def root():
 @app.get("/health")
 async def health():
     """Health check endpoint"""
-    # Check if ChromaDB exists
     chroma_exists = CHROMA_DIR.exists()
     
     return {
@@ -71,7 +74,7 @@ async def health():
     }
 
 
-@app.post("/upload_report", response_model=UploadReportResponse)
+@app.post("/api/upload_report", response_model=UploadReportResponse)
 async def upload_report(file: UploadFile = File(...)):
     """
     Upload a short report PDF and extract claims
@@ -82,13 +85,11 @@ async def upload_report(file: UploadFile = File(...)):
     if not file.filename.endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Only PDF files are supported")
     
-    # Generate report ID
     report_id = str(uuid.uuid4())
     report_path = REPORTS_DIR / f"{report_id}.pdf"
     claims_path = REPORTS_DIR / f"{report_id}.claims.json"
     
     try:
-        # Save uploaded file
         report_path.parent.mkdir(parents=True, exist_ok=True)
         with open(report_path, "wb") as f:
             content = await file.read()
@@ -96,21 +97,16 @@ async def upload_report(file: UploadFile = File(...)):
         
         logger.info(f"Saved report {report_id} to {report_path}")
         
-        # Extract text from first 3 pages
         pages = extract_pdf_text(report_path)
         if not pages:
             raise HTTPException(status_code=400, detail="Failed to extract text from PDF")
         
-        # Combine text for claim extraction
         full_text = "\n\n".join([f"Page {pnum}:\n{text}" for pnum, text in pages])
-        
-        # Extract claims
         claims = extract_claims_from_text(full_text, pages)
         
         if not claims:
             raise HTTPException(status_code=400, detail="Failed to extract claims from report")
         
-        # Save claims to cache
         save_json(
             {
                 "report_id": report_id,
@@ -129,7 +125,6 @@ async def upload_report(file: UploadFile = File(...)):
         )
         
     except HTTPException:
-        # Re-raise HTTP exceptions as-is
         raise
     except Exception as e:
         import traceback
@@ -139,24 +134,15 @@ async def upload_report(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Error processing report: {str(e)}")
 
 
-@app.post("/analyze", response_model=AnalyzeResponse)
+@app.post("/api/analyze", response_model=AnalyzeResponse)
 async def analyze_claims(request: AnalyzeRequest):
-    # Set a longer timeout for this endpoint
-    # This is a long-running operation
     """
     Analyze claims by retrieving evidence and judging coverage
-    
-    Args:
-        request: AnalyzeRequest with report_id and options
-    
-    Returns:
-        Complete analysis report in JSON and Markdown formats
     """
     report_id = request.report_id
     top_k = request.top_k
     max_claims = request.max_claims
     
-    # Load cached claims
     claims_path = REPORTS_DIR / f"{report_id}.claims.json"
     if not claims_path.exists():
         raise HTTPException(status_code=404, detail=f"Report {report_id} not found. Please upload first.")
@@ -167,28 +153,21 @@ async def analyze_claims(request: AnalyzeRequest):
     if not claims_data:
         raise HTTPException(status_code=400, detail="No claims found in cached data")
     
-    # Convert to Claim objects
     claims = [Claim(**c) for c in claims_data[:max_claims]]
-    
     logger.info(f"Analyzing {len(claims)} claims for report {report_id}")
     
-    # Analyze each claim
     analyses = []
     
     for i, claim in enumerate(claims, 1):
         logger.info(f"Processing claim {i}/{len(claims)}: {claim.claim_id}")
         
         try:
-            # Retrieve relevant documents
             citations = retrieve_relevant_documents(claim.claim_text, top_k=top_k)
-            
-            # Judge the claim
             analysis = judge_claim(claim, citations)
             analyses.append(analysis)
             
         except Exception as e:
             logger.error(f"Error analyzing claim {claim.claim_id}: {e}")
-            # Create default analysis for failed claims
             analyses.append(ClaimAnalysis(
                 claim_id=claim.claim_id,
                 coverage="not_addressed",
@@ -199,10 +178,8 @@ async def analyze_claims(request: AnalyzeRequest):
                 recommended_actions=["检查系统错误"]
             ))
     
-    # Generate report
     report = create_analysis_report(report_id, claims, analyses)
     
-    # Save report
     report_json_path = REPORTS_DIR / f"{report_id}.report.json"
     report_md_path = REPORTS_DIR / f"{report_id}.report.md"
     
@@ -217,17 +194,10 @@ async def analyze_claims(request: AnalyzeRequest):
     )
 
 
-@app.get("/download_report/{report_id}")
+@app.get("/api/download_report/{report_id}")
 async def download_report(report_id: str, format: str = "md"):
     """
     Download generated report
-    
-    Args:
-        report_id: Report identifier
-        format: Report format ("md" or "json")
-    
-    Returns:
-        File response with report
     """
     if format == "md":
         file_path = REPORTS_DIR / f"{report_id}.report.md"

@@ -13,8 +13,8 @@ except ImportError:
     # dotenv not installed, use environment variables directly
     pass
 
-# Base directory
-BASE_DIR = Path(__file__).parent.parent
+# Base directory - backend is in rag_demo/backend, so go up one level to rag_demo root
+BASE_DIR = Path(__file__).parent.parent.parent
 
 # Ollama configuration
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
@@ -22,7 +22,7 @@ OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 LLM_MODEL = os.getenv("LLM_MODEL", "llama3.1:8b")
 EMBED_MODEL = os.getenv("EMBED_MODEL", "nomic-embed-text")
 
-# Storage paths
+# Storage paths - relative to rag_demo root (one level up from backend)
 CHROMA_DIR = Path(os.getenv("CHROMA_DIR", BASE_DIR / "storage" / "chroma"))
 INTERNAL_DATA_DIR = Path(os.getenv("INTERNAL_DATA_DIR", BASE_DIR / "company" / "EDU"))
 REPORTS_DIR = Path(os.getenv("REPORTS_DIR", BASE_DIR / "storage" / "reports"))

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Short Report Rebuttal Assistant - Quick Start Script
+# Short Report Rebuttal Assistant - Start Script (Frontend + Backend)
 
 echo "🚀 Starting Short Report Rebuttal Assistant..."
 
@@ -8,11 +8,11 @@ echo "🚀 Starting Short Report Rebuttal Assistant..."
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Check if .env exists
-if [ ! -f .env ]; then
-    echo "⚠️  .env file not found. Creating from sample.env..."
-    cp sample.env .env
-    echo "✅ Created .env file. Please edit it if needed."
+# Check if .env exists in backend
+if [ ! -f backend/.env ]; then
+    echo "⚠️  backend/.env file not found. Creating from .env.example..."
+    cp backend/.env.example backend/.env 2>/dev/null || cp backend/sample.env backend/.env 2>/dev/null
+    echo "✅ Created backend/.env file. Please edit it if needed."
 fi
 
 # Check if Ollama is running
@@ -40,7 +40,9 @@ echo "✅ Required models are available"
 # Check if internal documents are indexed
 if [ ! -d "storage/chroma" ] || [ -z "$(ls -A storage/chroma 2>/dev/null)" ]; then
     echo "⚠️  Internal documents not indexed. Running index script..."
+    cd backend
     python -m app.index_internal
+    cd ..
     echo "✅ Internal documents indexed"
 else
     echo "✅ Internal documents already indexed"
@@ -50,13 +52,13 @@ fi
 cleanup() {
     echo ""
     echo "🛑 Shutting down services..."
-    if [ ! -z "$FASTAPI_PID" ]; then
-        kill $FASTAPI_PID 2>/dev/null
-        echo "   ✅ FastAPI server stopped"
+    if [ ! -z "$BACKEND_PID" ]; then
+        kill $BACKEND_PID 2>/dev/null
+        echo "   ✅ Backend server stopped"
     fi
-    if [ ! -z "$STREAMLIT_PID" ]; then
-        kill $STREAMLIT_PID 2>/dev/null
-        echo "   ✅ Streamlit UI stopped"
+    if [ ! -z "$FRONTEND_PID" ]; then
+        kill $FRONTEND_PID 2>/dev/null
+        echo "   ✅ Frontend server stopped"
     fi
     exit 0
 }
@@ -64,76 +66,81 @@ cleanup() {
 # Trap Ctrl+C and cleanup
 trap cleanup SIGINT SIGTERM
 
-# Start FastAPI server in background
+# Start backend server
 echo ""
-echo "📡 Starting FastAPI server..."
-echo "   API will be available at http://localhost:8000"
-echo "   API docs at http://localhost:8000/docs"
-uvicorn main:app --reload --host 0.0.0.0 --port 8000 > /tmp/fastapi.log 2>&1 &
-FASTAPI_PID=$!
+echo "📡 Starting backend server..."
+cd backend
+uvicorn main:app --reload --host 0.0.0.0 --port 8000 > /tmp/backend.log 2>&1 &
+BACKEND_PID=$!
+cd ..
 
-# Wait a bit for FastAPI to start
+# Wait for backend to start
 sleep 3
 
-# Check if FastAPI started successfully
-if ! kill -0 $FASTAPI_PID 2>/dev/null; then
-    echo "❌ Failed to start FastAPI server. Check /tmp/fastapi.log for details."
+if ! kill -0 $BACKEND_PID 2>/dev/null; then
+    echo "❌ Failed to start backend server. Check /tmp/backend.log for details."
     exit 1
 fi
 
-echo "✅ FastAPI server started (PID: $FASTAPI_PID)"
+echo "✅ Backend server started (PID: $BACKEND_PID)"
 
-# Start Streamlit UI in background
+# Check if frontend dependencies are installed
+if [ ! -d "frontend/node_modules" ]; then
+    echo ""
+    echo "📦 Installing frontend dependencies..."
+    cd frontend
+    npm install
+    cd ..
+fi
+
+# Start frontend server
 echo ""
-echo "🎨 Starting Streamlit UI..."
-echo "   UI will be available at http://localhost:8501"
-streamlit run streamlit_app.py --server.headless true > /tmp/streamlit.log 2>&1 &
-STREAMLIT_PID=$!
+echo "🎨 Starting frontend server..."
+cd frontend
+npm run dev > /tmp/frontend.log 2>&1 &
+FRONTEND_PID=$!
+cd ..
 
-# Wait a bit for Streamlit to start
-sleep 3
+# Wait for frontend to start
+sleep 5
 
-# Check if Streamlit started successfully
-if ! kill -0 $STREAMLIT_PID 2>/dev/null; then
-    echo "❌ Failed to start Streamlit UI. Check /tmp/streamlit.log for details."
-    kill $FASTAPI_PID 2>/dev/null
+if ! kill -0 $FRONTEND_PID 2>/dev/null; then
+    echo "❌ Failed to start frontend server. Check /tmp/frontend.log for details."
+    kill $BACKEND_PID 2>/dev/null
     exit 1
 fi
 
-echo "✅ Streamlit UI started (PID: $STREAMLIT_PID)"
+echo "✅ Frontend server started (PID: $FRONTEND_PID)"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "🎉 All services are running!"
 echo ""
 echo "📍 Access points:"
-echo "   • Streamlit UI:  http://localhost:8501"
-echo "   • FastAPI API:   http://localhost:8000"
+echo "   • Frontend:     http://localhost:3000"
+echo "   • Backend API:  http://localhost:8000"
 echo "   • API Docs:     http://localhost:8000/docs"
 echo ""
 echo "📝 Logs:"
-echo "   • FastAPI:   tail -f /tmp/fastapi.log"
-echo "   • Streamlit: tail -f /tmp/streamlit.log"
+echo "   • Backend:   tail -f /tmp/backend.log"
+echo "   • Frontend:  tail -f /tmp/frontend.log"
 echo ""
 echo "Press Ctrl+C to stop all services"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-# Wait a bit more for Streamlit to fully initialize
+# Wait a bit more for services to fully initialize
 sleep 2
 
 # Open browser automatically
 echo "🌐 Opening browser..."
 if command -v open >/dev/null 2>&1; then
-    # macOS
-    open http://localhost:8501
+    open http://localhost:3000
 elif command -v xdg-open >/dev/null 2>&1; then
-    # Linux
-    xdg-open http://localhost:8501
+    xdg-open http://localhost:3000
 elif command -v start >/dev/null 2>&1; then
-    # Windows (Git Bash)
-    start http://localhost:8501
+    start http://localhost:3000
 else
-    echo "⚠️  Could not automatically open browser. Please visit http://localhost:8501"
+    echo "⚠️  Could not automatically open browser. Please visit http://localhost:3000"
 fi
 
 # Wait for user interrupt
