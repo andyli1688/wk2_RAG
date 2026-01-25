@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import './App.css'
 
@@ -13,6 +13,59 @@ function App() {
   const [error, setError] = useState(null)
   const [topK, setTopK] = useState(6)
   const [maxClaims, setMaxClaims] = useState(30)
+  const [vectorDbStatus, setVectorDbStatus] = useState(null)
+  const [indexing, setIndexing] = useState(false)
+
+  // Check vector DB status on mount
+  useEffect(() => {
+    checkVectorDb()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const checkVectorDb = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL.replace('/api', '')}/health`)
+      setVectorDbStatus({
+        exists: response.data.chroma_db_exists,
+        collectionExists: response.data.collection_exists || false,
+        count: response.data.collection_count || 0
+      })
+      
+      // If collection doesn't exist or is empty, prompt to index
+      if (!response.data.collection_exists || response.data.collection_count === 0) {
+        const shouldIndex = window.confirm(
+          '向量数据库未找到或为空。\n\n是否现在索引 company/EDU/company_data.pdf？\n\n这将需要几分钟时间。'
+        )
+        if (shouldIndex) {
+          await indexDocuments()
+        }
+      }
+    } catch (err) {
+      console.error('Failed to check vector DB:', err)
+    }
+  }
+
+  const indexDocuments = async () => {
+    setIndexing(true)
+    setError(null)
+    try {
+      const response = await axios.post(`${API_BASE_URL.replace('/api', '')}/api/check_and_index`)
+      if (response.data.indexed) {
+        setVectorDbStatus({
+          exists: true,
+          collectionExists: true,
+          count: response.data.count
+        })
+        alert(`✓ ${response.data.message}`)
+      } else {
+        setError(response.data.message || '索引失败')
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || err.message || '索引失败')
+    } finally {
+      setIndexing(false)
+    }
+  }
 
   const handleFileUpload = async (event) => {
     const file = event.target.files[0]
@@ -136,6 +189,25 @@ function App() {
       </nav>
 
       <main className="main-content">
+        {/* Vector DB Status */}
+        {vectorDbStatus && (
+          <div className={`status-message ${vectorDbStatus.collectionExists && vectorDbStatus.count > 0 ? 'success' : 'warning'}`}>
+            {vectorDbStatus.collectionExists && vectorDbStatus.count > 0 ? (
+              <>✅ 向量数据库已就绪 ({vectorDbStatus.count} 个文档块)</>
+            ) : (
+              <>
+                ⚠️ 向量数据库未就绪
+                {!indexing && (
+                  <button onClick={indexDocuments} className="index-button" style={{ marginLeft: '1rem' }}>
+                    索引文档
+                  </button>
+                )}
+              </>
+            )}
+            {indexing && <span style={{ marginLeft: '1rem' }}>正在索引中...</span>}
+          </div>
+        )}
+
         {error && (
           <div className="error-message">
             ❌ {error}
@@ -230,6 +302,94 @@ function App() {
                         <div className="stat-value">{analysis.summary.not_addressed}</div>
                         <div className="stat-label">未解决</div>
                       </div>
+                    </div>
+
+                    <h3 style={{ marginTop: '2rem' }}>详细分析</h3>
+                    <div className="claims-analysis">
+                      {analysis.claim_analyses.map((claimAnalysis, index) => {
+                        const claim = claims.find(c => c.claim_id === claimAnalysis.claim_id) || {}
+                        const coverageIcon = {
+                          'fully_addressed': '✅',
+                          'partially_addressed': '⚠️',
+                          'not_addressed': '❌'
+                        }[claimAnalysis.coverage] || '❓'
+                        
+                        return (
+                          <div key={index} className="claim-analysis-card">
+                            <div className="claim-analysis-header">
+                              <span className="coverage-icon">{coverageIcon}</span>
+                              <div className="claim-analysis-title">
+                                <strong>{claimAnalysis.claim_id}:</strong> {claim.claim_text || 'Unknown'}
+                              </div>
+                              <div className="claim-analysis-meta">
+                                <span className={`coverage-badge coverage-${claimAnalysis.coverage}`}>
+                                  {claimAnalysis.coverage === 'fully_addressed' ? '完全解决' :
+                                   claimAnalysis.coverage === 'partially_addressed' ? '部分解决' : '未解决'}
+                                </span>
+                                <span className="confidence-badge">
+                                  置信度: {claimAnalysis.confidence}/100
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="claim-analysis-content">
+                              <div className="reasoning-section">
+                                <h4>分析推理</h4>
+                                <div className="reasoning-text">{claimAnalysis.reasoning}</div>
+                              </div>
+
+                              {claimAnalysis.citations && claimAnalysis.citations.length > 0 && (
+                                <div className="citations-section">
+                                  <h4>检索到的证据文档 ({claimAnalysis.citations.length} 个)</h4>
+                                  <div className="citations-list">
+                                    {claimAnalysis.citations.map((citation, citIndex) => (
+                                      <div key={citIndex} className="citation-card">
+                                        <div className="citation-header">
+                                          <span className="citation-number">#{citIndex + 1}</span>
+                                          <strong className="citation-title">{citation.doc_title}</strong>
+                                          {citation.similarity_score !== undefined && (
+                                            <span className="similarity-badge">
+                                              相似度: {(citation.similarity_score * 100).toFixed(1)}%
+                                            </span>
+                                          )}
+                                        </div>
+                                        <div className="citation-meta">
+                                          文档ID: {citation.doc_id} | 分块ID: {citation.chunk_id}
+                                        </div>
+                                        <div className="citation-quote">
+                                          <em>"{citation.quote}"</em>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {claimAnalysis.gaps && claimAnalysis.gaps.length > 0 && (
+                                <div className="gaps-section">
+                                  <h4>证据缺口</h4>
+                                  <ul>
+                                    {claimAnalysis.gaps.map((gap, gapIndex) => (
+                                      <li key={gapIndex}>{gap}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+
+                              {claimAnalysis.recommended_actions && claimAnalysis.recommended_actions.length > 0 && (
+                                <div className="actions-section">
+                                  <h4>建议行动</h4>
+                                  <ul>
+                                    {claimAnalysis.recommended_actions.map((action, actionIndex) => (
+                                      <li key={actionIndex}>{action}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
                   </div>
                 )}

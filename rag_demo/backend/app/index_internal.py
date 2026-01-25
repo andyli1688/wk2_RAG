@@ -70,8 +70,60 @@ def load_documents(data_dir: Path) -> List[Dict[str, str]]:
         logger.warning(f"Data directory does not exist: {data_dir}")
         return documents
     
+    # First try direct files in the directory
+    for file_path in data_dir.iterdir():
+        if file_path.is_file() and file_path.suffix.lower() in extensions:
+            try:
+                if file_path.suffix.lower() == '.pdf':
+                    from app.pdf_extract import extract_full_text
+                    text = extract_full_text(file_path, max_pages=1000)  # Load all pages for internal docs
+                elif file_path.suffix.lower() in ['.txt', '.md']:
+                    text = file_path.read_text(encoding='utf-8')
+                elif file_path.suffix.lower() == '.docx':
+                    try:
+                        from docx import Document
+                        doc = Document(file_path)
+                        text = '\n'.join([para.text for para in doc.paragraphs])
+                    except ImportError:
+                        logger.warning(f"python-docx not installed, skipping {file_path}")
+                        continue
+                    except Exception as e:
+                        logger.warning(f"Failed to read DOCX {file_path}: {e}")
+                        continue
+                else:
+                    continue
+                
+                if text.strip():
+                    documents.append({
+                        'doc_id': file_path.stem,
+                        'doc_title': file_path.name,
+                        'doc_path': str(file_path),
+                        'text': text
+                    })
+                    logger.info(f"Loaded document: {file_path.name} ({len(text)} chars)")
+                    
+            except ImportError as import_err:
+                error_msg = str(import_err)
+                if "pypdf" in error_msg.lower() or "pdfplumber" in error_msg.lower():
+                    logger.error(f"PDF library not installed. Please install: pip install pypdf pdfplumber")
+                    logger.error(f"Or install all dependencies: pip install -r requirements.txt")
+                else:
+                    logger.error(f"Missing required library for {file_path}: {import_err}")
+                    logger.error("Please install required dependencies: pip install -r requirements.txt")
+                raise
+            except Exception as e:
+                logger.error(f"Failed to load {file_path}: {e}")
+                import traceback
+                logger.error(f"Traceback: {traceback.format_exc()}")
+                # Don't raise here, continue with other files
+                continue
+    
+    # Also try rglob for subdirectories
     for file_path in data_dir.rglob('*'):
         if file_path.is_file() and file_path.suffix.lower() in extensions:
+            # Skip if already processed
+            if any(doc['doc_path'] == str(file_path) for doc in documents):
+                continue
             try:
                 if file_path.suffix.lower() == '.pdf':
                     from app.pdf_extract import extract_full_text
@@ -110,15 +162,57 @@ def load_documents(data_dir: Path) -> List[Dict[str, str]]:
 def index_internal_documents():
     """
     Main function to index all internal documents
+    Processes company/EDU/company_data.pdf and stores in vector DB
     """
     logger.info("Starting internal document indexing")
+    logger.info(f"Looking for documents in: {INTERNAL_DATA_DIR}")
+    # INTERNAL_DATA_DIR is already resolved in config.py, but ensure it's absolute
+    internal_dir = Path(INTERNAL_DATA_DIR).resolve()
+    logger.info(f"Absolute path: {internal_dir}")
+    logger.info(f"Path exists: {internal_dir.exists()}")
+    
+    # Ensure we use resolved absolute path
+    internal_dir = Path(INTERNAL_DATA_DIR).resolve()
+    
+    # Verify directory exists
+    if not internal_dir.exists():
+        logger.error(f"Directory does not exist: {internal_dir}")
+        # Try to find the correct path
+        possible_paths = [
+            Path(__file__).parent.parent.parent / "company" / "EDU",  # From rag_demo root
+            Path(__file__).parent.parent.parent.parent / "company" / "EDU",  # Alternative
+        ]
+        for possible in possible_paths:
+            resolved_possible = possible.resolve()
+            logger.info(f"Checking possible path: {resolved_possible} (exists: {resolved_possible.exists()})")
+            if resolved_possible.exists():
+                logger.warning(f"Found directory at: {resolved_possible}")
+                internal_dir = resolved_possible
+                break
+        else:
+            raise FileNotFoundError(f"Internal data directory not found: {internal_dir}")
     
     # Load documents
-    documents = load_documents(INTERNAL_DATA_DIR)
+    documents = load_documents(internal_dir)
     
     if not documents:
-        logger.warning(f"No documents found in {INTERNAL_DATA_DIR}")
-        return
+        logger.warning(f"No documents found in {internal_dir}")
+        logger.warning(f"Absolute path: {internal_dir}")
+        logger.warning(f"Expected file: {internal_dir / 'company_data.pdf'}")
+        # List actual files in directory
+        if internal_dir.exists():
+            actual_files = list(internal_dir.glob('*'))
+            logger.warning(f"Actual files in directory: {[f.name for f in actual_files]}")
+            # Check if PDF extraction failed
+            pdf_files = list(internal_dir.glob('*.pdf'))
+            if pdf_files:
+                logger.error(f"PDF files found but extraction failed. Check if PDF libraries are installed:")
+                logger.error(f"  pip install pypdf pdfplumber")
+        raise ValueError(f"No documents found in {internal_dir}. Please check if PDF libraries are installed: pip install pypdf pdfplumber")
+    
+    logger.info(f"Found {len(documents)} document(s) to index:")
+    for doc in documents:
+        logger.info(f"  - {doc['doc_title']} ({len(doc['text'])} characters)")
     
     # Initialize ChromaDB
     client = chromadb.PersistentClient(
@@ -132,14 +226,10 @@ def index_internal_documents():
         metadata={"description": "Internal company documents for rebuttal"}
     )
     
-    # Clear existing collection if needed
+    # Check if collection already has data - if yes, skip indexing
     if collection.count() > 0:
-        logger.info(f"Clearing existing collection ({collection.count()} items)")
-        client.delete_collection("internal_documents")
-        collection = client.get_or_create_collection(
-            name="internal_documents",
-            metadata={"description": "Internal company documents for rebuttal"}
-        )
+        logger.info(f"Collection already exists with {collection.count()} items. Skipping indexing.")
+        return
     
     # Process each document
     all_chunks = []

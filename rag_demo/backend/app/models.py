@@ -22,6 +22,7 @@ class Citation(BaseModel):
     doc_title: str = Field(..., description="Document title")
     chunk_id: str = Field(..., description="Chunk identifier within the document")
     quote: str = Field(..., description="Relevant quote from the source")
+    similarity_score: Optional[float] = Field(None, description="Similarity score (0-1, higher is more similar)")
 
 
 class ClaimAnalysis(BaseModel):

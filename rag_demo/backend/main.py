@@ -10,7 +10,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config import REPORTS_DIR, CHROMA_DIR
+from app.config import REPORTS_DIR, CHROMA_DIR, INTERNAL_DATA_DIR
 from app.models import (
     UploadReportResponse, AnalyzeRequest, AnalyzeResponse,
     Claim, ClaimAnalysis
@@ -67,11 +67,118 @@ async def health():
     """Health check endpoint"""
     chroma_exists = CHROMA_DIR.exists()
     
+    # Check if ChromaDB collection exists and has data
+    collection_exists = False
+    collection_count = 0
+    if chroma_exists:
+        try:
+            import chromadb
+            from chromadb.config import Settings
+            client = chromadb.PersistentClient(
+                path=str(CHROMA_DIR),
+                settings=Settings(anonymized_telemetry=False)
+            )
+            try:
+                collection = client.get_collection("internal_documents")
+                collection_exists = True
+                collection_count = collection.count()
+            except Exception:
+                collection_exists = False
+        except Exception:
+            pass
+    
     return {
         "status": "healthy",
         "chroma_db_exists": chroma_exists,
+        "collection_exists": collection_exists,
+        "collection_count": collection_count,
         "reports_dir": str(REPORTS_DIR)
     }
+
+
+@app.post("/api/check_and_index")
+async def check_and_index():
+    """
+    Check if vector DB exists and has data, if not, index company_data.pdf
+    """
+    try:
+        import chromadb
+        from chromadb.config import Settings
+        from app.index_internal import index_internal_documents
+        
+        # Check if collection exists and has data
+        collection_exists = False
+        collection_count = 0
+        
+        if CHROMA_DIR.exists():
+            try:
+                client = chromadb.PersistentClient(
+                    path=str(CHROMA_DIR),
+                    settings=Settings(anonymized_telemetry=False)
+                )
+                collection = client.get_collection("internal_documents")
+                collection_exists = True
+                collection_count = collection.count()
+            except Exception:
+                collection_exists = False
+        
+        if collection_exists and collection_count > 0:
+            return {
+                "indexed": True,
+                "message": f"Vector DB already exists with {collection_count} chunks",
+                "count": collection_count
+            }
+        
+        # Index documents
+        logger.info("Vector DB not found or empty, starting indexing...")
+        logger.info(f"INTERNAL_DATA_DIR: {INTERNAL_DATA_DIR}")
+        logger.info(f"INTERNAL_DATA_DIR exists: {INTERNAL_DATA_DIR.exists()}")
+        
+        try:
+            index_internal_documents()
+        except Exception as index_error:
+            logger.error(f"Indexing failed: {index_error}")
+            import traceback
+            error_trace = traceback.format_exc()
+            logger.error(f"Traceback: {error_trace}")
+            return {
+                "indexed": False,
+                "message": f"索引失败: {str(index_error)}",
+                "error": error_trace
+            }
+        
+        # Check again after indexing
+        try:
+            client = chromadb.PersistentClient(
+                path=str(CHROMA_DIR),
+                settings=Settings(anonymized_telemetry=False)
+            )
+            collection = client.get_collection("internal_documents")
+            final_count = collection.count()
+            
+            return {
+                "indexed": True,
+                "message": f"成功索引 {final_count} 个文档块",
+                "count": final_count
+            }
+        except Exception as check_error:
+            logger.error(f"Failed to verify indexing: {check_error}")
+            return {
+                "indexed": False,
+                "message": f"索引完成但验证失败: {str(check_error)}",
+                "error": str(check_error)
+            }
+        
+    except Exception as e:
+        logger.error(f"Error checking/indexing: {e}")
+        import traceback
+        error_trace = traceback.format_exc()
+        logger.error(f"Traceback: {error_trace}")
+        return {
+            "indexed": False,
+            "message": f"错误: {str(e)}",
+            "error": error_trace
+        }
 
 
 @app.post("/api/upload_report", response_model=UploadReportResponse)

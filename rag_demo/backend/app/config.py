@@ -23,9 +23,21 @@ LLM_MODEL = os.getenv("LLM_MODEL", "llama3.1:8b")
 EMBED_MODEL = os.getenv("EMBED_MODEL", "nomic-embed-text")
 
 # Storage paths - relative to rag_demo root (one level up from backend)
-CHROMA_DIR = Path(os.getenv("CHROMA_DIR", BASE_DIR / "storage" / "chroma"))
-INTERNAL_DATA_DIR = Path(os.getenv("INTERNAL_DATA_DIR", BASE_DIR / "company" / "EDU"))
-REPORTS_DIR = Path(os.getenv("REPORTS_DIR", BASE_DIR / "storage" / "reports"))
+# Handle both relative and absolute paths from environment variables
+def _resolve_path(env_var: str, default_path: Path) -> Path:
+    """Resolve path from environment variable or use default, ensuring absolute path"""
+    env_path = os.getenv(env_var)
+    if env_path:
+        path = Path(env_path)
+        # If relative path, resolve relative to BASE_DIR (rag_demo root)
+        if not path.is_absolute():
+            path = BASE_DIR / path
+        return path.resolve()
+    return default_path.resolve()
+
+CHROMA_DIR = _resolve_path("CHROMA_DIR", BASE_DIR / "storage" / "chroma")
+INTERNAL_DATA_DIR = _resolve_path("INTERNAL_DATA_DIR", BASE_DIR / "company" / "EDU")
+REPORTS_DIR = _resolve_path("REPORTS_DIR", BASE_DIR / "storage" / "reports")
 
 # Ensure directories exist
 CHROMA_DIR.mkdir(parents=True, exist_ok=True)

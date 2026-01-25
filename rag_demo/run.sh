@@ -38,15 +38,54 @@ fi
 echo "✅ Required models are available"
 
 # Check if internal documents are indexed
-if [ ! -d "storage/chroma" ] || [ -z "$(ls -A storage/chroma 2>/dev/null)" ]; then
-    echo "⚠️  Internal documents not indexed. Running index script..."
-    cd backend
+echo "🔍 Checking vector database..."
+cd backend
+python3 << 'PYTHON_SCRIPT'
+import sys
+from pathlib import Path
+import chromadb
+from chromadb.config import Settings
+
+try:
+    chroma_dir = Path("../storage/chroma")
+    if chroma_dir.exists():
+        client = chromadb.PersistentClient(
+            path=str(chroma_dir),
+            settings=Settings(anonymized_telemetry=False)
+        )
+        try:
+            collection = client.get_collection("internal_documents")
+            count = collection.count()
+            if count > 0:
+                print(f"✅ Vector DB exists with {count} chunks")
+                sys.exit(0)
+            else:
+                print("⚠️  Vector DB exists but is empty")
+                sys.exit(1)
+        except Exception:
+            print("⚠️  Vector DB directory exists but collection not found")
+            sys.exit(1)
+    else:
+        print("⚠️  Vector DB not found")
+        sys.exit(1)
+except Exception as e:
+    print(f"⚠️  Error checking vector DB: {e}")
+    sys.exit(1)
+PYTHON_SCRIPT
+
+INDEX_CHECK=$?
+
+if [ $INDEX_CHECK -ne 0 ]; then
+    echo "⚠️  Vector DB not found or empty. Indexing company_data.pdf..."
     python -m app.index_internal
-    cd ..
-    echo "✅ Internal documents indexed"
-else
-    echo "✅ Internal documents already indexed"
+    if [ $? -eq 0 ]; then
+        echo "✅ Internal documents indexed successfully"
+    else
+        echo "❌ Failed to index documents"
+        exit 1
+    fi
 fi
+cd ..
 
 # Function to cleanup on exit
 cleanup() {

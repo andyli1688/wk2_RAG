@@ -86,14 +86,19 @@ def retrieve_relevant_documents(claim_text: str, top_k: int = DEFAULT_TOP_K) -> 
                 results['documents'][0],
                 results['distances'][0] if 'distances' in results else [0.0] * len(results['ids'][0])
             )):
+                # Convert distance to similarity score (lower distance = higher similarity)
+                # ChromaDB uses cosine distance, so similarity = 1 - distance
+                similarity = max(0.0, min(1.0, 1.0 - distance)) if distance is not None else 0.0
+                
                 citation = Citation(
                     doc_id=metadata.get('doc_id', doc_id),
                     doc_title=metadata.get('doc_title', 'Unknown'),
                     chunk_id=metadata.get('chunk_id', doc_id),
-                    quote=document[:500]  # First 500 chars as quote
+                    quote=document[:500] if len(document) > 500 else document,  # First 500 chars as quote
+                    similarity_score=round(similarity, 4)
                 )
                 citations.append(citation)
-                logger.debug(f"Retrieved: {citation.doc_title} (distance: {distance:.4f})")
+                logger.debug(f"Retrieved: {citation.doc_title} (similarity: {similarity:.4f})")
         
         logger.info(f"Retrieved {len(citations)} relevant documents")
         return citations
