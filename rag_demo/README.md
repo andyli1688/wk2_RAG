@@ -89,6 +89,7 @@ npm run dev
 - **前端**: http://localhost:3000
 - **后端API**: http://localhost:8000
 - **API文档**: http://localhost:8000/docs
+- **API测试**: 运行 `./test_api.sh` 或 `python test_api.py`
 
 ## 技术栈
 
@@ -149,6 +150,31 @@ ollama serve
 - 前端默认端口: 3000
 
 可以在配置文件中修改
+
+## API 文档
+
+详细的 API 文档和使用说明请查看：
+- [API_DOCUMENTATION.md](API_DOCUMENTATION.md) - 完整的 API 文档和使用指南
+
+## 测试 API
+
+### 使用测试脚本
+
+**Shell 脚本**:
+```bash
+./test_api.sh
+```
+
+**Python 脚本**:
+```bash
+python test_api.py
+```
+
+测试脚本会验证：
+- Ollama 服务连接
+- 后端 REST API 端点
+- 向量数据库状态
+- 完整的上传→分析流程
 
 ## 许可证
 
