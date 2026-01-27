@@ -2,6 +2,7 @@
   "name": "rebuttal-assistant-frontend",
   "version": "1.0.0",
   "private": true,
+  "_updated": "2026-01-27",
   "type": "module",
   "scripts": {
     "dev": "vite",
