@@ -1,0 +1,168 @@
+{
+  "report_id": "b4f55fef-0c6d-4e24-b075-cd7e02d8b2c5",
+  "generated_at": "2026-01-24T21:40:45.147129",
+  "summary": {
+    "total_claims": 6,
+    "fully_addressed": 0,
+    "partially_addressed": 0,
+    "not_addressed": 6,
+    "average_confidence": 0.0,
+    "key_gaps": [
+      "可能需要审计报告、财务报表、合同等",
+      "需要查找与论点相关的内部文档"
+    ],
+    "priority_actions": [
+      "咨询相关部门",
+      "扩大检索范围",
+      "收集相关内部文档"
+    ]
+  },
+  "claims": [
+    {
+      "claim_id": "C001",
+      "claim_text": "EDU has reported 392% revenue growth since going public.",
+      "page_numbers": [
+        2
+      ],
+      "claim_type": "metrics"
+    },
+    {
+      "claim_id": "C002",
+      "claim_text": "The revenue growth has been built on store growth of 338% during this time.",
+      "page_numbers": [
+        2
+      ],
+      "claim_type": "metrics"
+    },
+    {
+      "claim_id": "C003",
+      "claim_text": "EDU tells investors that its entire store network is company-owned, but this is a lie.",
+      "page_numbers": [
+        2
+      ],
+      "claim_type": "fraud"
+    },
+    {
+      "claim_id": "C004",
+      "claim_text": "As recently as last month, EDU president and CFO Louis Hsieh adamantly denied that EDU has any franchisees.",
+      "page_numbers": [
+        2
+      ],
+      "claim_type": "fraud"
+    },
+    {
+      "claim_id": "C005",
+      "claim_text": "EDU has numerous franchisees.",
+      "page_numbers": [
+        2
+      ],
+      "claim_type": "business_model"
+    },
+    {
+      "claim_id": "C006",
+      "claim_text": "It is virtually certain that EDU uses the upfront franchise and other fees to inflate its cash balances in order to receive unqualified audit opinions from its auditor.",
+      "page_numbers": [
+        2
+      ],
+      "claim_type": "accounting"
+    }
+  ],
+  "analyses": [
+    {
+      "claim_id": "C001",
+      "coverage": "not_addressed",
+      "reasoning": "未找到相关内部证据。需要进一步检索或收集相关文档。",
+      "citations": [],
+      "confidence": 0,
+      "gaps": [
+        "需要查找与论点相关的内部文档",
+        "可能需要审计报告、财务报表、合同等"
+      ],
+      "recommended_actions": [
+        "扩大检索范围",
+        "收集相关内部文档",
+        "咨询相关部门"
+      ]
+    },
+    {
+      "claim_id": "C002",
+      "coverage": "not_addressed",
+      "reasoning": "未找到相关内部证据。需要进一步检索或收集相关文档。",
+      "citations": [],
+      "confidence": 0,
+      "gaps": [
+        "需要查找与论点相关的内部文档",
+        "可能需要审计报告、财务报表、合同等"
+      ],
+      "recommended_actions": [
+        "扩大检索范围",
+        "收集相关内部文档",
+        "咨询相关部门"
+      ]
+    },
+    {
+      "claim_id": "C003",
+      "coverage": "not_addressed",
+      "reasoning": "未找到相关内部证据。需要进一步检索或收集相关文档。",
+      "citations": [],
+      "confidence": 0,
+      "gaps": [
+        "需要查找与论点相关的内部文档",
+        "可能需要审计报告、财务报表、合同等"
+      ],
+      "recommended_actions": [
+        "扩大检索范围",
+        "收集相关内部文档",
+        "咨询相关部门"
+      ]
+    },
+    {
+      "claim_id": "C004",
+      "coverage": "not_addressed",
+      "reasoning": "未找到相关内部证据。需要进一步检索或收集相关文档。",
+      "citations": [],
+      "confidence": 0,
+      "gaps": [
+        "需要查找与论点相关的内部文档",
+        "可能需要审计报告、财务报表、合同等"
+      ],
+      "recommended_actions": [
+        "扩大检索范围",
+        "收集相关内部文档",
+        "咨询相关部门"
+      ]
+    },
+    {
+      "claim_id": "C005",
+      "coverage": "not_addressed",
+      "reasoning": "未找到相关内部证据。需要进一步检索或收集相关文档。",
+      "citations": [],
+      "confidence": 0,
+      "gaps": [
+        "需要查找与论点相关的内部文档",
+        "可能需要审计报告、财务报表、合同等"
+      ],
+      "recommended_actions": [
+        "扩大检索范围",
+        "收集相关内部文档",
+        "咨询相关部门"
+      ]
+    },
+    {
+      "claim_id": "C006",
+      "coverage": "not_addressed",
+      "reasoning": "未找到相关内部证据。需要进一步检索或收集相关文档。",
+      "citations": [],
+      "confidence": 0,
+      "gaps": [
+        "需要查找与论点相关的内部文档",
+        "可能需要审计报告、财务报表、合同等"
+      ],
+      "recommended_actions": [
+        "扩大检索范围",
+        "收集相关内部文档",
+        "咨询相关部门"
+      ]
+    }
+  ]
+}
