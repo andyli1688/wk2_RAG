@@ -8,7 +8,10 @@ from typing import List, Dict
 import chromadb
 from chromadb.config import Settings
 
-from app.config import CHROMA_DIR, EMBED_MODEL, OLLAMA_BASE_URL, DEFAULT_TOP_K
+from app.config import (
+    CHROMA_DIR, EMBED_MODEL, OLLAMA_BASE_URL, DEFAULT_TOP_K,
+    LLM_PROVIDER, openai_client, EMBED_DIMENSION
+)
 from app.models import Citation
 from app.utils import logger
 
@@ -16,28 +19,47 @@ logger = logging.getLogger(__name__)
 
 
 def get_embedding(text: str) -> List[float]:
-    """Get embedding for text using Ollama"""
+    """Get embedding for text using configured provider (OpenAI or Ollama)"""
     try:
-        url = f"{OLLAMA_BASE_URL}/api/embeddings"
-        payload = {
-            "model": EMBED_MODEL,
-            "prompt": text
-        }
-        
-        response = requests.post(url, json=payload, timeout=30)
-        response.raise_for_status()
-        
-        result = response.json()
-        embedding = result.get("embedding", [])
-        
-        if not embedding:
-            raise ValueError("Ollama returned empty embedding")
-        
-        return embedding
-        
+        if LLM_PROVIDER == "openai":
+            if not openai_client:
+                raise ConnectionError("OpenAI client not initialized. Please set OPENAI_API_KEY.")
+
+            response = openai_client.embeddings.create(
+                model=EMBED_MODEL,
+                input=text
+            )
+            embedding = response.data[0].embedding
+
+            if not embedding:
+                raise ValueError("OpenAI returned empty embedding")
+
+            return embedding
+        else:
+            # Ollama API
+            url = f"{OLLAMA_BASE_URL}/api/embeddings"
+            payload = {
+                "model": EMBED_MODEL,
+                "prompt": text
+            }
+
+            response = requests.post(url, json=payload, timeout=30)
+            response.raise_for_status()
+
+            result = response.json()
+            embedding = result.get("embedding", [])
+
+            if not embedding:
+                raise ValueError("Ollama returned empty embedding")
+
+            return embedding
+
     except Exception as e:
         logger.error(f"Failed to get embedding: {e}")
-        raise ConnectionError(f"Failed to connect to Ollama for embeddings: {e}")
+        if LLM_PROVIDER == "openai":
+            raise ConnectionError(f"Failed to get embeddings from OpenAI: {e}")
+        else:
+            raise ConnectionError(f"Failed to connect to Ollama for embeddings: {e}")
 
 
 def retrieve_relevant_documents(claim_text: str, top_k: int = DEFAULT_TOP_K) -> List[Citation]:

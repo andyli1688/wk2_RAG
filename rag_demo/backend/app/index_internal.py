@@ -11,7 +11,7 @@ from chromadb.config import Settings
 
 from app.config import (
     INTERNAL_DATA_DIR, CHROMA_DIR, EMBED_MODEL, OLLAMA_BASE_URL,
-    CHUNK_SIZE, CHUNK_OVERLAP
+    CHUNK_SIZE, CHUNK_OVERLAP, LLM_PROVIDER, openai_client, EMBED_DIMENSION
 )
 from app.utils import chunk_text, logger
 
@@ -20,35 +20,54 @@ logger = logging.getLogger(__name__)
 
 def get_embedding(text: str) -> List[float]:
     """
-    Get embedding for text using Ollama
-    
+    Get embedding for text using configured provider (OpenAI or Ollama)
+
     Args:
         text: Text to embed
-    
+
     Returns:
         Embedding vector
     """
     try:
-        url = f"{OLLAMA_BASE_URL}/api/embeddings"
-        payload = {
-            "model": EMBED_MODEL,
-            "prompt": text
-        }
-        
-        response = requests.post(url, json=payload, timeout=30)
-        response.raise_for_status()
-        
-        result = response.json()
-        embedding = result.get("embedding", [])
-        
-        if not embedding:
-            raise ValueError("Ollama returned empty embedding")
-        
-        return embedding
-        
+        if LLM_PROVIDER == "openai":
+            if not openai_client:
+                raise ConnectionError("OpenAI client not initialized. Please set OPENAI_API_KEY.")
+
+            response = openai_client.embeddings.create(
+                model=EMBED_MODEL,
+                input=text
+            )
+            embedding = response.data[0].embedding
+
+            if not embedding:
+                raise ValueError("OpenAI returned empty embedding")
+
+            return embedding
+        else:
+            # Ollama API
+            url = f"{OLLAMA_BASE_URL}/api/embeddings"
+            payload = {
+                "model": EMBED_MODEL,
+                "prompt": text
+            }
+
+            response = requests.post(url, json=payload, timeout=30)
+            response.raise_for_status()
+
+            result = response.json()
+            embedding = result.get("embedding", [])
+
+            if not embedding:
+                raise ValueError("Ollama returned empty embedding")
+
+            return embedding
+
     except requests.exceptions.RequestException as e:
         logger.error(f"Failed to get embedding: {e}")
-        raise ConnectionError(f"Failed to connect to Ollama for embeddings: {e}")
+        if LLM_PROVIDER == "openai":
+            raise ConnectionError(f"Failed to get embeddings from OpenAI: {e}")
+        else:
+            raise ConnectionError(f"Failed to connect to Ollama for embeddings: {e}")
 
 
 def load_documents(data_dir: Path) -> List[Dict[str, str]]:
@@ -274,7 +293,7 @@ def index_internal_documents():
             except Exception as e:
                 logger.error(f"Failed to embed chunk {batch_ids[len(embeddings)]}: {e}")
                 # Use zero vector as fallback (not ideal, but allows processing to continue)
-                embeddings.append([0.0] * 768)
+                embeddings.append([0.0] * EMBED_DIMENSION)
         
         # Add to collection
         collection.add(

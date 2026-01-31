@@ -16,11 +16,39 @@ except ImportError:
 # Base directory - backend is in rag_demo/backend, so go up one level to rag_demo root
 BASE_DIR = Path(__file__).parent.parent.parent
 
-# Ollama configuration
+# LLM Provider configuration: "openai" or "ollama"
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openai").lower()
+
+# OpenAI configuration
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+
+# Provider-specific defaults
+if LLM_PROVIDER == "openai":
+    LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4o-mini")
+    EMBED_MODEL = os.getenv("EMBED_MODEL", "text-embedding-3-large")
+    EMBED_DIMENSION = 3072  # text-embedding-3-large dimension
+else:
+    # Ollama configuration
+    LLM_MODEL = os.getenv("LLM_MODEL", "llama3.1:8b")
+    EMBED_MODEL = os.getenv("EMBED_MODEL", "nomic-embed-text")
+    EMBED_DIMENSION = 768  # nomic-embed-text dimension
+
+# Ollama configuration (used when LLM_PROVIDER=ollama)
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-# Default to llama3.1:8b if available, fallback to llama3.1
-LLM_MODEL = os.getenv("LLM_MODEL", "llama3.1:8b")
-EMBED_MODEL = os.getenv("EMBED_MODEL", "nomic-embed-text")
+
+# Initialize OpenAI client if provider is openai
+openai_client = None
+if LLM_PROVIDER == "openai":
+    if not OPENAI_API_KEY:
+        import warnings
+        warnings.warn("LLM_PROVIDER is 'openai' but OPENAI_API_KEY is not set. Please set OPENAI_API_KEY environment variable.")
+    else:
+        try:
+            from openai import OpenAI
+            openai_client = OpenAI(api_key=OPENAI_API_KEY)
+        except ImportError:
+            import warnings
+            warnings.warn("OpenAI package not installed. Please run: pip install openai")
 
 # Storage paths - relative to rag_demo root (one level up from backend)
 # Handle both relative and absolute paths from environment variables
