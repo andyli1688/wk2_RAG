@@ -22,7 +22,7 @@ from app.models import (
     ClaimAnalysis,
     UploadReportResponse,
 )
-from app.pdf_extract import extract_pdf_text
+from app.pdf_extract import extract_document_text
 from app.report import create_analysis_report
 from app.retrieval import retrieve_relevant_documents
 from app.utils import load_json, logger, save_json
@@ -192,36 +192,44 @@ async def check_and_index():
 @app.post("/api/upload_report", response_model=UploadReportResponse)
 async def upload_report(file: UploadFile = File(...)):
     """
-    Upload a short report PDF and extract claims
-    
+    Upload a short report (PDF, TXT, or DOCX) and extract claims
+
     Returns:
         report_id and extracted claims
     """
-    if not file.filename.endswith('.pdf'):
-        raise HTTPException(status_code=400, detail="Only PDF files are supported")
-    
+    # Validate file extension
+    valid_extensions = ['.pdf', '.txt', '.docx', '.doc']
+    file_ext = Path(file.filename).suffix.lower()
+    if file_ext not in valid_extensions:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Only {', '.join(valid_extensions)} files are supported"
+        )
+
     report_id = str(uuid.uuid4())
-    report_path = REPORTS_DIR / f"{report_id}.pdf"
+    report_path = REPORTS_DIR / f"{report_id}{file_ext}"
     claims_path = REPORTS_DIR / f"{report_id}.claims.json"
-    
+
     try:
         report_path.parent.mkdir(parents=True, exist_ok=True)
+        # Save uploaded file
         with open(report_path, "wb") as f:
             content = await file.read()
             f.write(content)
-        
+
         logger.info(f"Saved report {report_id} to {report_path}")
-        
-        pages = extract_pdf_text(report_path)
+
+        # Extract text from document
+        pages = extract_document_text(report_path)
         if not pages:
-            raise HTTPException(status_code=400, detail="Failed to extract text from PDF")
-        
+            raise HTTPException(status_code=400, detail=f"Failed to extract text from {file_ext} file")
+
         full_text = "\n\n".join([f"Page {pnum}:\n{text}" for pnum, text in pages])
         claims = extract_claims_from_text(full_text, pages)
-        
+
         if not claims:
             raise HTTPException(status_code=400, detail="Failed to extract claims from report")
-        
+
         save_json(
             {
                 "report_id": report_id,
@@ -230,15 +238,15 @@ async def upload_report(file: UploadFile = File(...)):
             },
             claims_path
         )
-        
-        logger.info(f"Extracted {len(claims)} claims from report {report_id}")
-        
+
+        logger.info(f"Extracted {len(claims)} claims from {file_ext} report {report_id}")
+
         return UploadReportResponse(
             report_id=report_id,
             claims=claims,
             message=f"Successfully uploaded and extracted {len(claims)} claims"
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
