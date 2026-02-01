@@ -85,3 +85,33 @@ TEMPERATURE = 0.3  # Lower temperature for more deterministic output
 
 # Logging
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+
+
+# Embedding dimension tracking
+def get_expected_embedding_dimension() -> int:
+    """Get the expected embedding dimension for the current LLM provider"""
+    if LLM_PROVIDER == "openai":
+        if "3-large" in EMBED_MODEL:
+            return 3072
+        elif "3-small" in EMBED_MODEL:
+            return 1536
+        else:
+            return 3072  # Default for OpenAI
+    else:
+        # Ollama models
+        if "nomic" in EMBED_MODEL:
+            return 768
+        elif "bge" in EMBED_MODEL.lower():
+            return 1024
+        else:
+            return 768  # Default for Ollama
+
+
+def is_embedding_dimension_mismatch(stored_dimension: int) -> bool:
+    """Check if stored embedding dimension matches current configuration"""
+    return stored_dimension != EMBED_DIMENSION
+
+
+def get_dimension_change_info(old_dim: int, new_dim: int) -> str:
+    """Generate a user-friendly message about dimension change"""
+    return f"Embedding dimension changed from {old_dim} to {new_dim} (likely due to LLM_PROVIDER or EMBED_MODEL change)"
