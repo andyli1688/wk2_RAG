@@ -153,7 +153,7 @@ async def check_and_index():
             logger.error(f"Traceback: {error_trace}")
             return {
                 "indexed": False,
-                "message": f"索引失败: {str(index_error)}",
+                "message": f"Indexing failed: {str(index_error)}",
                 "error": error_trace
             }
         
@@ -168,14 +168,14 @@ async def check_and_index():
             
             return {
                 "indexed": True,
-                "message": f"成功索引 {final_count} 个文档块",
+                "message": f"Successfully indexed {final_count} document chunks",
                 "count": final_count
             }
         except Exception as check_error:
             logger.error(f"Failed to verify indexing: {check_error}")
             return {
                 "indexed": False,
-                "message": f"索引完成但验证失败: {str(check_error)}",
+                "message": f"Indexing completed but verification failed: {str(check_error)}",
                 "error": str(check_error)
             }
         
@@ -186,7 +186,7 @@ async def check_and_index():
         logger.error(f"Traceback: {error_trace}")
         return {
             "indexed": False,
-            "message": f"错误: {str(e)}",
+            "message": f"Error: {str(e)}",
             "error": error_trace
         }
 
@@ -368,11 +368,11 @@ async def analyze_claims(request: AnalyzeRequest):
             analyses.append(ClaimAnalysis(
                 claim_id=claim.claim_id,
                 coverage="not_addressed",
-                reasoning=f"处理过程中出现错误: {str(e)}",
+                reasoning=f"Error occurred during processing: {str(e)}",
                 citations=[],
                 confidence=0,
-                gaps=["需要重新处理"],
-                recommended_actions=["检查系统错误"]
+                gaps=["Requires reprocessing"],
+                recommended_actions=["Check system errors"]
             ))
     
     report = create_analysis_report(report_id, claims, analyses)
