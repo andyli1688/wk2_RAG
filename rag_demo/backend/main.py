@@ -4,23 +4,31 @@ FastAPI main application for Short Report Rebuttal Assistant
 import logging
 import uuid
 from pathlib import Path
-from typing import Optional
+from io import BytesIO
 
-from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import JSONResponse, FileResponse
-from fastapi.middleware.cors import CORSMiddleware
-
-from app.config import REPORTS_DIR, CHROMA_DIR, INTERNAL_DATA_DIR
-from app.models import (
-    UploadReportResponse, AnalyzeRequest, AnalyzeResponse,
-    Claim, ClaimAnalysis
-)
-from app.pdf_extract import extract_pdf_text
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from app.claim_extract import extract_claims_from_text
-from app.retrieval import retrieve_relevant_documents
+from app.config import CHROMA_DIR, INTERNAL_DATA_DIR, REPORTS_DIR
 from app.judge import judge_claim
+from app.models import (
+    AnalyzeRequest,
+    AnalyzeResponse,
+    Claim,
+    ClaimAnalysis,
+    UploadReportResponse,
+)
+from app.pdf_extract import extract_document_text
 from app.report import create_analysis_report
-from app.utils import save_json, load_json, logger
+from app.retrieval import retrieve_relevant_documents
+from app.utils import load_json, logger, save_json
+from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, StreamingResponse
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -103,8 +111,8 @@ async def check_and_index():
     """
     try:
         import chromadb
-        from chromadb.config import Settings
         from app.index_internal import index_internal_documents
+        from chromadb.config import Settings
         
         # Check if collection exists and has data
         collection_exists = False
@@ -184,36 +192,44 @@ async def check_and_index():
 @app.post("/api/upload_report", response_model=UploadReportResponse)
 async def upload_report(file: UploadFile = File(...)):
     """
-    Upload a short report PDF and extract claims
-    
+    Upload a short report (PDF, TXT, or DOCX) and extract claims
+
     Returns:
         report_id and extracted claims
     """
-    if not file.filename.endswith('.pdf'):
-        raise HTTPException(status_code=400, detail="Only PDF files are supported")
-    
+    # Validate file extension
+    valid_extensions = ['.pdf', '.txt', '.docx', '.doc']
+    file_ext = Path(file.filename).suffix.lower()
+    if file_ext not in valid_extensions:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Only {', '.join(valid_extensions)} files are supported"
+        )
+
     report_id = str(uuid.uuid4())
-    report_path = REPORTS_DIR / f"{report_id}.pdf"
+    report_path = REPORTS_DIR / f"{report_id}{file_ext}"
     claims_path = REPORTS_DIR / f"{report_id}.claims.json"
-    
+
     try:
         report_path.parent.mkdir(parents=True, exist_ok=True)
+        # Save uploaded file
         with open(report_path, "wb") as f:
             content = await file.read()
             f.write(content)
-        
+
         logger.info(f"Saved report {report_id} to {report_path}")
-        
-        pages = extract_pdf_text(report_path)
+
+        # Extract text from document
+        pages = extract_document_text(report_path)
         if not pages:
-            raise HTTPException(status_code=400, detail="Failed to extract text from PDF")
-        
+            raise HTTPException(status_code=400, detail=f"Failed to extract text from {file_ext} file")
+
         full_text = "\n\n".join([f"Page {pnum}:\n{text}" for pnum, text in pages])
         claims = extract_claims_from_text(full_text, pages)
-        
+
         if not claims:
             raise HTTPException(status_code=400, detail="Failed to extract claims from report")
-        
+
         save_json(
             {
                 "report_id": report_id,
@@ -222,15 +238,15 @@ async def upload_report(file: UploadFile = File(...)):
             },
             claims_path
         )
-        
-        logger.info(f"Extracted {len(claims)} claims from report {report_id}")
-        
+
+        logger.info(f"Extracted {len(claims)} claims from {file_ext} report {report_id}")
+
         return UploadReportResponse(
             report_id=report_id,
             claims=claims,
             message=f"Successfully uploaded and extracted {len(claims)} claims"
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -239,6 +255,43 @@ async def upload_report(file: UploadFile = File(...)):
         logger.error(f"Error uploading report: {e}")
         logger.error(f"Traceback: {error_trace}")
         raise HTTPException(status_code=500, detail=f"Error processing report: {str(e)}")
+
+
+@app.post("/api/extract_claims", response_model=UploadReportResponse)
+async def extract_claims(request: AnalyzeRequest):
+    """
+    Extract claims from a previously uploaded report
+    Returns cached claims from the upload step
+    """
+    report_id = request.report_id
+    claims_path = REPORTS_DIR / f"{report_id}.claims.json"
+
+    if not claims_path.exists():
+        raise HTTPException(status_code=404, detail=f"Report {report_id} not found. Please upload first.")
+
+    try:
+        cached_data = load_json(claims_path)
+        claims_data = cached_data.get("claims", [])
+
+        if not claims_data:
+            raise HTTPException(status_code=400, detail="No claims found in cached data")
+
+        claims = [Claim(**c) for c in claims_data]
+
+        return UploadReportResponse(
+            report_id=report_id,
+            claims=claims,
+            message=f"Successfully retrieved {len(claims)} claims"
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        logger.error(f"Error extracting claims: {e}")
+        logger.error(f"Traceback: {error_trace}")
+        raise HTTPException(status_code=500, detail=f"Error retrieving claims: {str(e)}")
 
 
 @app.post("/api/analyze", response_model=AnalyzeResponse)
@@ -301,28 +354,197 @@ async def analyze_claims(request: AnalyzeRequest):
     )
 
 
+def get_chinese_font_name() -> str:
+    """
+    Find and register a Chinese font from the system
+    Returns the font name to use in PDF generation
+    """
+    import os
+
+    # Try common Windows Chinese font locations
+    possible_paths = [
+        r'C:\Windows\Fonts\SimSun.ttc',      # Simplified Chinese (most common)
+        r'C:\Windows\Fonts\msyh.ttf',        # Microsoft YaHei
+        r'C:\Windows\Fonts\SimHei.ttf',      # SimHei (bold)
+        r'C:\Windows\Fonts\simsunb.ttf',     # SimSun Bold
+    ]
+
+    for font_path in possible_paths:
+        if os.path.exists(font_path):
+            try:
+                font_name = 'ChineseFont'
+                # Only register if not already registered
+                if font_name not in pdfmetrics.getRegisteredFontNames():
+                    pdfmetrics.registerFont(TTFont(font_name, font_path))
+                logger.info(f"Registered Chinese font from {font_path}")
+                return font_name
+            except Exception as e:
+                logger.warning(f"Failed to register font {font_path}: {e}")
+                continue
+
+    logger.warning("No Chinese font found on system, PDF may display Chinese as boxes")
+    return 'Helvetica'
+
+
+def markdown_to_pdf(markdown_text: str, title: str) -> BytesIO:
+    """
+    Convert markdown text to PDF with Unicode support for Chinese characters
+    Uses reportlab Platypus for better text handling
+    """
+    pdf_buffer = BytesIO()
+
+    # Get registered Chinese font
+    font_name = get_chinese_font_name()
+
+    # Create PDF document
+    doc = SimpleDocTemplate(
+        pdf_buffer,
+        pagesize=letter,
+        rightMargin=0.75 * inch,
+        leftMargin=0.75 * inch,
+        topMargin=0.75 * inch,
+        bottomMargin=0.75 * inch
+    )
+
+    # Create styles
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontName=font_name,
+        fontSize=16,
+        textColor='black',
+        spaceAfter=12,
+        alignment=1  # Center
+    )
+
+    h2_style = ParagraphStyle(
+        'CustomH2',
+        parent=styles['Heading2'],
+        fontName=font_name,
+        fontSize=13,
+        textColor='black',
+        spaceAfter=8,
+        spaceBefore=8
+    )
+
+    h3_style = ParagraphStyle(
+        'CustomH3',
+        parent=styles['Heading3'],
+        fontName=font_name,
+        fontSize=11,
+        textColor='black',
+        spaceAfter=6,
+        spaceBefore=6
+    )
+
+    body_style = ParagraphStyle(
+        'CustomBody',
+        parent=styles['BodyText'],
+        fontName=font_name,
+        fontSize=10,
+        alignment=0,  # Left
+        spaceAfter=6
+    )
+
+    bullet_style = ParagraphStyle(
+        'CustomBullet',
+        parent=styles['BodyText'],
+        fontName=font_name,
+        fontSize=10,
+        leftIndent=20,
+        spaceAfter=4
+    )
+
+    # Build content
+    story = []
+    story.append(Paragraph(title, title_style))
+    story.append(Spacer(1, 0.3 * inch))
+
+    # Process markdown
+    lines = markdown_text.split('\n')
+    for line in lines:
+        if line.startswith('# '):
+            # H1 (skip, already added as title)
+            continue
+        elif line.startswith('## '):
+            # H2
+            text = line[3:].strip()
+            if text:
+                story.append(Paragraph(text, h2_style))
+        elif line.startswith('### '):
+            # H3
+            text = line[4:].strip()
+            if text:
+                story.append(Paragraph(text, h3_style))
+        elif line.startswith('- ') or line.startswith('* '):
+            # Bullet point
+            text = line[2:].strip()
+            if text:
+                story.append(Paragraph(f"• {text}", bullet_style))
+        elif line.strip():
+            # Regular paragraph
+            story.append(Paragraph(line.strip(), body_style))
+        else:
+            # Empty line - add small spacer
+            story.append(Spacer(1, 0.1 * inch))
+
+    # Build PDF
+    doc.build(story)
+    pdf_buffer.seek(0)
+    return pdf_buffer
+
+
 @app.get("/api/download_report/{report_id}")
 async def download_report(report_id: str, format: str = "md"):
     """
-    Download generated report
+    Download generated report in specified format
     """
     if format == "md":
         file_path = REPORTS_DIR / f"{report_id}.report.md"
         media_type = "text/markdown"
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"Report {report_id} not found")
+        return FileResponse(
+            path=str(file_path),
+            media_type=media_type,
+            filename=file_path.name
+        )
+
     elif format == "json":
         file_path = REPORTS_DIR / f"{report_id}.report.json"
         media_type = "application/json"
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail=f"Report {report_id} not found")
+        return FileResponse(
+            path=str(file_path),
+            media_type=media_type,
+            filename=file_path.name
+        )
+
+    elif format == "pdf":
+        md_file_path = REPORTS_DIR / f"{report_id}.report.md"
+        if not md_file_path.exists():
+            raise HTTPException(status_code=404, detail=f"Report {report_id} not found")
+
+        try:
+            # Read markdown content
+            markdown_content = md_file_path.read_text(encoding='utf-8')
+
+            # Convert to PDF
+            pdf_bytes = markdown_to_pdf(markdown_content, f"Report {report_id}")
+
+            return StreamingResponse(
+                iter([pdf_bytes.getvalue()]),
+                media_type="application/pdf",
+                headers={"Content-Disposition": f"attachment; filename=report_{report_id}.pdf"}
+            )
+        except Exception as e:
+            logger.error(f"Error generating PDF: {e}")
+            raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
+
     else:
-        raise HTTPException(status_code=400, detail="Format must be 'md' or 'json'")
-    
-    if not file_path.exists():
-        raise HTTPException(status_code=404, detail=f"Report {report_id} not found")
-    
-    return FileResponse(
-        path=str(file_path),
-        media_type=media_type,
-        filename=file_path.name
-    )
+        raise HTTPException(status_code=400, detail="Format must be 'md', 'json', or 'pdf'")
 
 
 if __name__ == "__main__":

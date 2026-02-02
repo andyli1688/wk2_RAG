@@ -116,8 +116,20 @@ function App() {
       setError(null)
       setUploadProgress(100)
       setUploadSuccess(true)
-      
-      // 上传成功后不自动跳转，等待用户点击"下一步"按钮
+
+      // Reset all workflow state for new report
+      setClaims([])
+      setAnalysis(null)
+      setEvidenceVerified(false)
+      setExtractingClaims(false)
+      setVerifyingEvidence(false)
+      setGeneratingRebuttal(false)
+      setExtractProgress(0)
+      setVerifyProgress(0)
+      setRebuttalProgress(0)
+
+      // Auto-navigate to extract tab to start workflow
+      setActiveTab('extract')
     } catch (err) {
       setError(err.response?.data?.detail || err.message || '上传失败')
       setUploadProgress(0)

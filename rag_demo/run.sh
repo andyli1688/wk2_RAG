@@ -15,27 +15,48 @@ if [ ! -f backend/.env ]; then
     echo "✅ Created backend/.env file. Please edit it if needed."
 fi
 
-# Check if Ollama is running
-echo "🔍 Checking Ollama connection..."
-if ! curl -s http://localhost:11434/api/tags > /dev/null; then
-    echo "❌ Ollama is not running. Please start Ollama first:"
-    echo "   ollama serve"
-    exit 1
+# Load .env file to get LLM_PROVIDER
+if [ -f backend/.env ]; then
+    export $(grep -v '^#' backend/.env | xargs)
 fi
-echo "✅ Ollama is running"
 
-# Check if models are available
-echo "🔍 Checking Ollama models..."
-MODELS=$(curl -s http://localhost:11434/api/tags | grep -o '"name":"[^"]*"' | cut -d'"' -f4)
-if [[ ! "$MODELS" == *"llama3.1"* ]] && [[ ! "$MODELS" == *"llama3"* ]]; then
-    echo "⚠️  LLM model (llama3.1:8b) not found. Downloading..."
-    ollama pull llama3.1:8b
+# Default to openai if not specified
+LLM_PROVIDER=${LLM_PROVIDER:-openai}
+echo "📦 LLM Provider: $LLM_PROVIDER"
+
+if [ "$LLM_PROVIDER" = "openai" ]; then
+    # Check for OpenAI API key
+    echo "🔍 Checking OpenAI configuration..."
+    if [ -z "$OPENAI_API_KEY" ]; then
+        echo "❌ OPENAI_API_KEY is not set."
+        echo "   Please set OPENAI_API_KEY in backend/.env or as an environment variable."
+        echo "   Or switch to Ollama by setting LLM_PROVIDER=ollama"
+        exit 1
+    fi
+    echo "✅ OpenAI API key is configured"
+else
+    # Check if Ollama is running
+    echo "🔍 Checking Ollama connection..."
+    if ! curl -s http://localhost:11434/api/tags > /dev/null; then
+        echo "❌ Ollama is not running. Please start Ollama first:"
+        echo "   ollama serve"
+        exit 1
+    fi
+    echo "✅ Ollama is running"
+
+    # Check if models are available
+    echo "🔍 Checking Ollama models..."
+    MODELS=$(curl -s http://localhost:11434/api/tags | grep -o '"name":"[^"]*"' | cut -d'"' -f4)
+    if [[ ! "$MODELS" == *"llama3.1"* ]] && [[ ! "$MODELS" == *"llama3"* ]]; then
+        echo "⚠️  LLM model (llama3.1:8b) not found. Downloading..."
+        ollama pull llama3.1:8b
+    fi
+    if [[ ! "$MODELS" == *"nomic-embed-text"* ]]; then
+        echo "⚠️  Embedding model (nomic-embed-text) not found. Downloading..."
+        ollama pull nomic-embed-text
+    fi
+    echo "✅ Required Ollama models are available"
 fi
-if [[ ! "$MODELS" == *"nomic-embed-text"* ]]; then
-    echo "⚠️  Embedding model (nomic-embed-text) not found. Downloading..."
-    ollama pull nomic-embed-text
-fi
-echo "✅ Required models are available"
 
 # Check if internal documents are indexed
 echo "🔍 Checking vector database..."

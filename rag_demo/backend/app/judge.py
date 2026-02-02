@@ -7,7 +7,8 @@ import re
 from typing import List
 import requests
 
-from app.config import OLLAMA_BASE_URL, LLM_MODEL, TEMPERATURE
+from app.config import OLLAMA_BASE_URL, LLM_MODEL, TEMPERATURE, LLM_PROVIDER
+from app.claim_extract import call_llm
 from app.models import Claim, ClaimAnalysis, Citation
 from app.utils import logger
 
@@ -120,32 +121,20 @@ ID: {claim.claim_id}
 返回ONLY有效的JSON，不要包含其他文本。"""
 
     try:
-        # Call Ollama API
-        url = f"{OLLAMA_BASE_URL}/api/chat"
-        payload = {
-            "model": LLM_MODEL,
-            "messages": [
-                {
-                    "role": "system",
-                    "content": "你是一位专业的财务分析师，擅长评估证据质量。总是返回有效的JSON格式。"
-                },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            "options": {
-                "temperature": TEMPERATURE,
-                "num_predict": 2000
+        # Call LLM API (OpenAI or Ollama)
+        messages = [
+            {
+                "role": "system",
+                "content": "你是一位专业的财务分析师，擅长评估证据质量。总是返回有效的JSON格式。"
             },
-            "stream": False
-        }
-        
-        response = requests.post(url, json=payload, timeout=180)
-        response.raise_for_status()
-        
-        result = response.json()
-        content = result.get("message", {}).get("content", "")
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
+
+        logger.info(f"Calling {LLM_PROVIDER.upper()} API for judgment")
+        content = call_llm(messages, temperature=TEMPERATURE, max_tokens=2000)
         
         if not content:
             raise ValueError("LLM returned empty response")
@@ -214,8 +203,11 @@ ID: {claim.claim_id}
             recommended_actions=["检查LLM响应格式"]
         )
     except requests.exceptions.RequestException as e:
-        logger.error(f"Failed to call Ollama API: {e}")
-        raise ConnectionError(f"Failed to connect to Ollama: {e}")
+        logger.error(f"Failed to call LLM API: {e}")
+        if LLM_PROVIDER == "openai":
+            raise ConnectionError(f"Failed to connect to OpenAI API: {e}")
+        else:
+            raise ConnectionError(f"Failed to connect to Ollama: {e}")
     except Exception as e:
         logger.error(f"Error judging claim: {e}")
         # Return default analysis
