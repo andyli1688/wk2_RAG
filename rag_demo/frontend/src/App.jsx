@@ -218,7 +218,13 @@ function App() {
     }
   }
 
-  // Claim extraction is now manual - user must click the "Extract Claims" button
+  // Auto-trigger claim extraction when user navigates to extract tab
+  useEffect(() => {
+    if (activeTab === 'extract' && reportId && claims.length === 0 && !extractingClaims) {
+      handleExtractClaims()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, reportId, claims.length])
 
   // 当进入证据核实页面且未核实时，自动开始核实
   useEffect(() => {
@@ -456,18 +462,6 @@ function App() {
                 {claims.length === 0 ? (
                   <>
                     <p className="help-text">从上传的报告中提取论点，系统将使用AI分析报告内容</p>
-
-                    {/* Manual extraction button */}
-                    {!extractingClaims && (
-                      <button
-                        onClick={handleExtractClaims}
-                        disabled={extractingClaims}
-                        className="primary-button"
-                        style={{ marginTop: '2rem' }}
-                      >
-                        🔍 提取论点
-                      </button>
-                    )}
 
                     {/* 提取进度条 */}
                     {extractingClaims && extractProgress > 0 && (
