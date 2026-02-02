@@ -36,6 +36,14 @@ class ClaimAnalysis(BaseModel):
     recommended_actions: Optional[List[str]] = Field(None, description="Recommended follow-up actions")
 
 
+class UploadOnlyResponse(BaseModel):
+    """Response after uploading a report (without claim extraction)"""
+    report_id: str
+    filename: str
+    file_type: str
+    message: str
+
+
 class UploadReportResponse(BaseModel):
     """Response after uploading a report"""
     report_id: str

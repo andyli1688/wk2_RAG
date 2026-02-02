@@ -128,8 +128,7 @@ function App() {
       setVerifyProgress(0)
       setRebuttalProgress(0)
 
-      // Auto-navigate to extract tab to start workflow
-      setActiveTab('extract')
+      // Stay on upload tab, let user navigate to extract step manually
     } catch (err) {
       setError(err.response?.data?.detail || err.message || '上传失败')
       setUploadProgress(0)
@@ -164,7 +163,7 @@ function App() {
         `${API_BASE_URL}/extract_claims`,
         { report_id: reportId },
         {
-          timeout: 60000, // 60 seconds
+          timeout: 120000, // 120 seconds
         }
       )
 
@@ -219,13 +218,7 @@ function App() {
     }
   }
 
-  // 当进入论点提取页面且未提取时，自动开始提取
-  useEffect(() => {
-    if (activeTab === 'extract' && reportId && claims.length === 0 && !extractingClaims) {
-      handleExtractClaims()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, reportId, claims.length])
+  // Claim extraction is now manual - user must click the "Extract Claims" button
 
   // 当进入证据核实页面且未核实时，自动开始核实
   useEffect(() => {
@@ -444,7 +437,6 @@ function App() {
                 onClick={() => {
                   if (reportId) {
                     setActiveTab('extract')
-                    // 跳转后会自动触发useEffect执行论点提取
                   }
                 }}
                 disabled={!reportId}
@@ -464,15 +456,22 @@ function App() {
                 {claims.length === 0 ? (
                   <>
                     <p className="help-text">从上传的报告中提取论点，系统将使用AI分析报告内容</p>
+
+                    {/* Manual extraction button */}
                     {!extractingClaims && (
-                      <p style={{ marginTop: '1rem', color: '#666', fontSize: '0.9rem' }}>
-                        正在自动提取论点，请稍候...
-                      </p>
+                      <button
+                        onClick={handleExtractClaims}
+                        disabled={extractingClaims}
+                        className="primary-button"
+                        style={{ marginTop: '2rem' }}
+                      >
+                        🔍 提取论点
+                      </button>
                     )}
 
                     {/* 提取进度条 */}
                     {extractingClaims && extractProgress > 0 && (
-                      <div style={{ 
+                      <div style={{
                         marginTop: '2rem',
                         width: '100%',
                         maxWidth: '600px',

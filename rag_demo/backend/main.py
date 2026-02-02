@@ -5,6 +5,7 @@ import logging
 import uuid
 from pathlib import Path
 from io import BytesIO
+from datetime import datetime
 
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -21,6 +22,7 @@ from app.models import (
     Claim,
     ClaimAnalysis,
     UploadReportResponse,
+    UploadOnlyResponse,
 )
 from app.pdf_extract import extract_document_text
 from app.report import create_analysis_report
@@ -189,13 +191,13 @@ async def check_and_index():
         }
 
 
-@app.post("/api/upload_report", response_model=UploadReportResponse)
+@app.post("/api/upload_report", response_model=UploadOnlyResponse)
 async def upload_report(file: UploadFile = File(...)):
     """
-    Upload a short report (PDF, TXT, or DOCX) and extract claims
+    Upload a short report (PDF, TXT, or DOCX) without extracting claims
 
     Returns:
-        report_id and extracted claims
+        report_id, filename, and file_type
     """
     # Validate file extension
     valid_extensions = ['.pdf', '.txt', '.docx', '.doc']
@@ -208,7 +210,7 @@ async def upload_report(file: UploadFile = File(...)):
 
     report_id = str(uuid.uuid4())
     report_path = REPORTS_DIR / f"{report_id}{file_ext}"
-    claims_path = REPORTS_DIR / f"{report_id}.claims.json"
+    extracted_path = REPORTS_DIR / f"{report_id}.extracted.json"
 
     try:
         report_path.parent.mkdir(parents=True, exist_ok=True)
@@ -219,32 +221,30 @@ async def upload_report(file: UploadFile = File(...)):
 
         logger.info(f"Saved report {report_id} to {report_path}")
 
-        # Extract text from document
+        # Extract text from document (for later use in claim extraction)
         pages = extract_document_text(report_path)
         if not pages:
             raise HTTPException(status_code=400, detail=f"Failed to extract text from {file_ext} file")
 
-        full_text = "\n\n".join([f"Page {pnum}:\n{text}" for pnum, text in pages])
-        claims = extract_claims_from_text(full_text, pages)
-
-        if not claims:
-            raise HTTPException(status_code=400, detail="Failed to extract claims from report")
-
+        # Save extracted document text for later claim extraction
         save_json(
             {
                 "report_id": report_id,
-                "claims": [c.dict() for c in claims],
+                "filename": file.filename,
+                "file_type": file_ext,
+                "extracted_at": datetime.now().isoformat(),
                 "pages": pages
             },
-            claims_path
+            extracted_path
         )
 
-        logger.info(f"Extracted {len(claims)} claims from {file_ext} report {report_id}")
+        logger.info(f"Saved extracted text for report {report_id}")
 
-        return UploadReportResponse(
+        return UploadOnlyResponse(
             report_id=report_id,
-            claims=claims,
-            message=f"Successfully uploaded and extracted {len(claims)} claims"
+            filename=file.filename,
+            file_type=file_ext,
+            message="Document uploaded successfully. Click 'Next Step' to extract claims."
         )
 
     except HTTPException:
@@ -261,27 +261,64 @@ async def upload_report(file: UploadFile = File(...)):
 async def extract_claims(request: AnalyzeRequest):
     """
     Extract claims from a previously uploaded report
-    Returns cached claims from the upload step
+    Performs LLM-based claim extraction on the document text
     """
     report_id = request.report_id
+    extracted_path = REPORTS_DIR / f"{report_id}.extracted.json"
     claims_path = REPORTS_DIR / f"{report_id}.claims.json"
 
-    if not claims_path.exists():
-        raise HTTPException(status_code=404, detail=f"Report {report_id} not found. Please upload first.")
+    # Check if document was uploaded
+    if not extracted_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="Report not found. Please upload a document first."
+        )
 
     try:
-        cached_data = load_json(claims_path)
-        claims_data = cached_data.get("claims", [])
+        # Check if claims already extracted (return cached claims)
+        if claims_path.exists():
+            cached_data = load_json(claims_path)
+            claims_data = cached_data.get("claims", [])
+            if claims_data:
+                claims = [Claim(**c) for c in claims_data]
+                logger.info(f"Returning cached claims for report {report_id}")
+                return UploadReportResponse(
+                    report_id=report_id,
+                    claims=claims,
+                    message=f"Successfully retrieved {len(claims)} cached claims"
+                )
 
-        if not claims_data:
-            raise HTTPException(status_code=400, detail="No claims found in cached data")
+        # Extract claims for the first time
+        extracted_data = load_json(extracted_path)
+        pages = extracted_data.get("pages", [])
 
-        claims = [Claim(**c) for c in claims_data]
+        if not pages:
+            raise HTTPException(status_code=400, detail="No document text found. Please upload a document.")
+
+        # Perform LLM-based claim extraction
+        full_text = "\n\n".join([f"Page {pnum}:\n{text}" for pnum, text in pages])
+        claims = extract_claims_from_text(full_text, pages)
+
+        if not claims:
+            raise HTTPException(status_code=400, detail="Failed to extract claims from report")
+
+        # Cache the extracted claims
+        save_json(
+            {
+                "report_id": report_id,
+                "claims": [c.dict() for c in claims],
+                "pages": pages,
+                "extracted_at": datetime.now().isoformat()
+            },
+            claims_path
+        )
+
+        logger.info(f"Extracted {len(claims)} claims from report {report_id}")
 
         return UploadReportResponse(
             report_id=report_id,
             claims=claims,
-            message=f"Successfully retrieved {len(claims)} claims"
+            message=f"Successfully extracted {len(claims)} claims"
         )
 
     except HTTPException:
@@ -291,7 +328,7 @@ async def extract_claims(request: AnalyzeRequest):
         error_trace = traceback.format_exc()
         logger.error(f"Error extracting claims: {e}")
         logger.error(f"Traceback: {error_trace}")
-        raise HTTPException(status_code=500, detail=f"Error retrieving claims: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error extracting claims: {str(e)}")
 
 
 @app.post("/api/analyze", response_model=AnalyzeResponse)
